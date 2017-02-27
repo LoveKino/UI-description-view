@@ -1,0 +1,35 @@
+{
+  "name": "ui-description-view",
+  "version": "0.0.1",
+  "description": "ui description view",
+  "main": "index.js",
+  "directories": {
+    "example": "example",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LoveKino/UI-description-view.git"
+  },
+  "keywords": [
+    "ui",
+    "description",
+    "view"
+  ],
+  "author": "ddchen",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/LoveKino/UI-description-view/issues"
+  },
+  "homepage": "https://github.com/LoveKino/UI-description-view#readme",
+  "devDependencies": {
+    "webpack": "^2.2.1"
+  },
+  "dependencies": {
+    "kabanery": "^0.1.5",
+    "leta-ui": "^0.1.8"
+  }
+}
