@@ -28425,8 +28425,8 @@ let completeData = (data) => {
     }
 
     data.contentExtractorPatternsMap = data.contentExtractorPatternsMap || {
-        'textContent': ['equal', 'contain', 'regExp'],
-        'imgUrl': ['regExp', 'equal']
+        'textContent': ['contain', 'equal', 'regExp'],
+        'containImgUrl': ['contain', 'regExp', 'equal']
     };
 
     data.styleExtractorPatternsMap = data.styleExtractorPatternsMap || {
@@ -28884,17 +28884,22 @@ document.body.appendChild(hintGrid);
 
 document.body.appendChild(udView({
     onchange: (v) => {
-        hintGrid.ctx.update('grid', v.position[0]);
+        try {
+            hintGrid.ctx.update('grid', v.position[0]);
 
-        let nodes = search(document.querySelectorAll('#searchItem *'), v, {
-            gridScope
-        });
-        nodes.map((node) => {
-            node.setAttribute('class', 'chosen');
-            setTimeout(() => {
-                node.setAttribute('class', '');
-            }, 2000);
-        });
+            let nodes = search(document.querySelectorAll('#searchItem *'), v, {
+                gridScope
+            });
+            console.log(nodes);
+            nodes.map((node) => {
+                node.setAttribute('class', 'chosen');
+                setTimeout(() => {
+                    node.setAttribute('class', '');
+                }, 2000);
+            });
+        } catch (err) {
+            console.log(err);
+        }
     }
 }));
 
@@ -29053,9 +29058,11 @@ module.exports = (node, {
 
 
 let textContent = __webpack_require__(113);
+let containImgUrl = __webpack_require__(136);
 
 module.exports = {
-    textContent
+    textContent,
+    containImgUrl
 };
 
 
@@ -29080,8 +29087,21 @@ module.exports = (node) => {
 
 let equal = (v1, v2) => v1 === v2;
 
+let contain = (pattern, content) => {
+    if (pattern === '' && content === '') return true;
+    if (!content) return false;
+    return content.indexOf(pattern) !== -1;
+};
+
+let regExp = (pattern, content) => {
+    let reg = new RegExp(pattern);
+    return reg.test(content);
+};
+
 module.exports = {
-    equal
+    equal,
+    contain,
+    regExp
 };
 
 
@@ -30058,6 +30078,41 @@ module.exports = (node, {
     }
 
     return patternWay(pattern, content);
+};
+
+
+/***/ }),
+/* 136 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    reduce
+} = __webpack_require__(2);
+
+// TODO inside or not
+module.exports = (node) => {
+    return getImgUrlsIncludeChildren(node).join('\n');
+};
+
+let getImgUrlsIncludeChildren = (node) => {
+    let imgUrls = [];
+    let url = getImgUrl(node);
+    if (url) {
+        imgUrls.push(url);
+    }
+
+    return reduce(node.childNodes, (prev, child) => {
+        return prev.concat(getImgUrlsIncludeChildren(child));
+    }, imgUrls);
+};
+
+let getImgUrl = (node) => {
+    if (node.tagName && node.tagName.toLowerCase() === 'img') {
+        return node.getAttribute('src');
+    }
 };
 
 

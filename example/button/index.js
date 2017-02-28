@@ -16,17 +16,22 @@ document.body.appendChild(hintGrid);
 
 document.body.appendChild(udView({
     onchange: (v) => {
-        hintGrid.ctx.update('grid', v.position[0]);
+        try {
+            hintGrid.ctx.update('grid', v.position[0]);
 
-        let nodes = search(document.querySelectorAll('#searchItem *'), v, {
-            gridScope
-        });
-        nodes.map((node) => {
-            node.setAttribute('class', 'chosen');
-            setTimeout(() => {
-                node.setAttribute('class', '');
-            }, 2000);
-        });
+            let nodes = search(document.querySelectorAll('#searchItem *'), v, {
+                gridScope
+            });
+            console.log(nodes);
+            nodes.map((node) => {
+                node.setAttribute('class', 'chosen');
+                setTimeout(() => {
+                    node.setAttribute('class', '');
+                }, 2000);
+            });
+        } catch (err) {
+            console.log(err);
+        }
     }
 }));
 

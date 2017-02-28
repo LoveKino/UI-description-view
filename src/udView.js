@@ -46,8 +46,8 @@ let completeData = (data) => {
     }
 
     data.contentExtractorPatternsMap = data.contentExtractorPatternsMap || {
-        'textContent': ['equal', 'contain', 'regExp'],
-        'imgUrl': ['regExp', 'equal']
+        'textContent': ['contain', 'equal', 'regExp'],
+        'containImgUrl': ['contain', 'regExp', 'equal']
     };
 
     data.styleExtractorPatternsMap = data.styleExtractorPatternsMap || {
