@@ -37,13 +37,13 @@ let AreaChosen = require('./view/areaChosen');
 let ExtractorPatternViewer = require('./view/extractorPatternView');
 
 let completeData = (data) => {
-    data.grid = data.grid || [3, 3];
-    if (data.area === undefined) {
-        data.area = [
+    data.position = data.position || [
+        [3, 3],
+        [
             [0, 0],
             [0, 0]
-        ];
-    }
+        ]
+    ];
 
     data.contentExtractorPatternsMap = data.contentExtractorPatternsMap || {
         'textContent': ['contain', 'equal', 'regExp'],
@@ -99,7 +99,7 @@ module.exports = view((data) => {
 
     let letaUI = RealLetaUI(
         describeUI(
-            describePosition([data.grid, data.area]),
+            describePosition(data.position),
             describeContent(data.content),
             describeStyle(data.style)
         ),
