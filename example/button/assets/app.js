@@ -2730,9 +2730,12 @@ let udView = __webpack_require__(105);
 
 let search = __webpack_require__(104);
 
+let gridHelperView = __webpack_require__(110);
+
 module.exports = {
     udView,
-    search
+    search,
+    gridHelperView
 };
 
 
@@ -28297,10 +28300,12 @@ module.exports = g;
 
 
 let {
-    filter
+    filter, any
 } = __webpack_require__(2);
 
 let InsideBox = __webpack_require__(109);
+
+let matchContent = __webpack_require__(111);
 
 /**
  * search target nodes accroding to the description of UI
@@ -28320,9 +28325,12 @@ module.exports = (nodes, {
 
     let insideBox = InsideBox(gridScope, position);
 
-    // filter by position
-    return filter(nodes, (node) => {
+    return filter(filter(nodes, (node) => {
         return insideBox(node.getBoundingClientRect());
+    }), (node) => {
+        return any(content, (item) => {
+            return matchContent(node, item);
+        });
     });
 };
 
@@ -28583,7 +28591,6 @@ let GridView = view((data, {
         } = data;
 
         let [horizontalGrid, verticalGrid] = grid;
-
 
         let unitWidth = width / horizontalGrid,
             unitHeight = height / verticalGrid;
@@ -28852,12 +28859,26 @@ module.exports = ({
 
 
 let {
-    udView, search
+    udView, search, gridHelperView
 } = __webpack_require__(26);
+
+let gridScope = wndsize();
+gridScope.x = 400;
+gridScope.width = gridScope.width - 400;
+
+let hintGrid = gridHelperView({
+    gridScope,
+    grid: [3, 3]
+});
+document.body.appendChild(hintGrid);
 
 document.body.appendChild(udView({
     onchange: (v) => {
-        let nodes = search(document.querySelectorAll('#searchItem *'), v);
+        hintGrid.ctx.update('grid', v.position[0]);
+
+        let nodes = search(document.querySelectorAll('#searchItem *'), v, {
+            gridScope
+        });
         nodes.map((node) => {
             node.setAttribute('class', 'chosen');
             setTimeout(() => {
@@ -28866,6 +28887,33 @@ document.body.appendChild(udView({
         });
     }
 }));
+
+function wndsize() {
+    var w = 0;
+    var h = 0;
+    //IE
+    if (!window.innerWidth) {
+        if (!(document.documentElement.clientWidth === 0)) {
+            //strict mode
+            w = document.documentElement.clientWidth;
+            h = document.documentElement.clientHeight;
+        } else {
+            //quirks mode
+            w = document.body.clientWidth;
+            h = document.body.clientHeight;
+        }
+    } else {
+        //w3c
+        w = window.innerWidth;
+        h = window.innerHeight;
+    }
+    return {
+        width: w,
+        height: h,
+        x: 0,
+        y: 0
+    };
+}
 
 
 /***/ }),
@@ -28900,6 +28948,131 @@ let getGridCoord = (scope, [m, n], [t, r]) => {
 };
 
 
+
+
+/***/ }),
+/* 110 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    n, view
+} = __webpack_require__(1);
+
+module.exports = view(({
+    grid,
+    gridScope
+}) => {
+    let [horizontalGrid, verticalGrid] = grid;
+
+    let unitWidth = gridScope.width / horizontalGrid,
+        unitHeight = gridScope.height / verticalGrid;
+
+    let grids = [];
+    for (let i = 0; i < horizontalGrid; i++) {
+        for (let j = 0; j < verticalGrid; j++) {
+            grids.push(n('div', {
+                style: {
+                    width: unitWidth,
+                    height: unitHeight,
+                    borderLeft: i > 0 ? 0 : '1px solid rgba(100, 100, 100, 0.3)',
+                    borderRight: '1px solid rgba(100, 100, 100, 0.3)',
+                    borderTop: j > 0 ? 0 : '1px solid rgba(100, 100, 100, 0.3)',
+                    borderBottom: '1px solid rgba(100, 100, 100, 0.3)',
+                    position: 'absolute',
+                    left: unitWidth * i,
+                    top: unitHeight * j,
+                    boxSizing: 'border-box',
+                    backgroundColor: 'rgba(200, 200, 200, 0.1)'
+                }
+            }));
+        }
+    }
+
+    return n('div', {
+        style: {
+            position: 'fixed',
+            boxSizing: 'border-box',
+            left: gridScope.x,
+            top: gridScope.y,
+            width: gridScope.width,
+            height: gridScope.height
+        }
+    }, [grids]);
+});
+
+
+/***/ }),
+/* 111 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let contentExtractorMap = __webpack_require__(112);
+
+let patternMap = __webpack_require__(114);
+
+module.exports = (node, {
+    extractorType,
+    patternType,
+    pattern
+}) => {
+    let extractor = contentExtractorMap[extractorType];
+    if (!extractor) {
+        return false;
+    }
+
+    let content = extractor(node);
+    let patternWay = patternMap[patternType];
+    if (!patternWay) {
+        return false;
+    }
+
+    return patternWay(pattern, content);
+};
+
+
+/***/ }),
+/* 112 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let textContent = __webpack_require__(113);
+
+module.exports = {
+    textContent
+};
+
+
+/***/ }),
+/* 113 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = (node) => {
+    return node.textContent;
+};
+
+
+/***/ }),
+/* 114 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let equal = (v1, v2) => v1 === v2;
+
+module.exports = {
+    equal
+};
 
 
 /***/ })

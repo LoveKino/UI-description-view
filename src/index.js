@@ -10,7 +10,10 @@ let udView = require('./udView');
 
 let search = require('./search');
 
+let gridHelperView = require('./view/gridHelperView');
+
 module.exports = {
     udView,
-    search
+    search,
+    gridHelperView
 };

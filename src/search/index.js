@@ -1,10 +1,12 @@
 'use strict';
 
 let {
-    filter
+    filter, any
 } = require('bolzano');
 
 let InsideBox = require('./insideBox');
+
+let matchContent = require('./matchContent');
 
 /**
  * search target nodes accroding to the description of UI
@@ -24,9 +26,12 @@ module.exports = (nodes, {
 
     let insideBox = InsideBox(gridScope, position);
 
-    // filter by position
-    return filter(nodes, (node) => {
+    return filter(filter(nodes, (node) => {
         return insideBox(node.getBoundingClientRect());
+    }), (node) => {
+        return any(content, (item) => {
+            return matchContent(node, item);
+        });
     });
 };
 

@@ -46,7 +46,6 @@ let GridView = view((data, {
 
         let [horizontalGrid, verticalGrid] = grid;
 
-
         let unitWidth = width / horizontalGrid,
             unitHeight = height / verticalGrid;
 
