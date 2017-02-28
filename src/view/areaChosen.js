@@ -4,8 +4,6 @@ let {
     n, view
 } = require('kabanery');
 
-let jsoneq = require('cl-jsoneq');
-
 let isItemChosen = (i, j, lt, rb) => {
     if (!lt || !rb) return false;
     let [x1, y1] = lt, [x2, y2] = rb;
@@ -33,19 +31,21 @@ let connectArea = (point1, point2) => {
 let GridView = view((data, {
     update
 }) => {
-    let width = 200,
-        height = 300;
+    let width = data.width || 150,
+        height = data.height || 240;
 
     let chosenPoint1 = null,
         chosenPoint2 = null;
 
     return () => {
         let {
-            horizontalGrid,
-            verticalGrid,
+            grid,
             area,
             onchange
         } = data;
+
+        let [horizontalGrid, verticalGrid] = grid;
+
 
         let unitWidth = width / horizontalGrid,
             unitHeight = height / verticalGrid;
@@ -115,6 +115,69 @@ let GridView = view((data, {
     };
 });
 
+let PositionView = view(({
+    value, onchange
+}, {
+    update
+}) => {
+    let grid = value.value[0];
+    // TODO why without div wrapper, won't update in the gridview
+    return n('div', [
+        n('label', 'grid'),
+
+        n(`input type=number value=${grid[0]}`, {
+            style: {
+                width: 100,
+                minWidth: 100,
+                marginRight: 10
+            },
+            oninput: (e) => {
+                let m = Number(e.target.value);
+                if (m !== grid[0]) {
+                    grid[0] = m;
+                    value.value[1] = [
+                        [0, 0],
+                        [0, 0]
+                    ];
+                    update();
+                    onchange && onchange(value);
+                }
+            }
+        }),
+        n(`input type=number value=${grid[1]}`, {
+            style: {
+                width: 100,
+                minWidth: 100
+            },
+
+            oninput: (e) => {
+                let n = Number(e.target.value);
+                if (n !== grid[1]) {
+                    grid[1] = n;
+                    value.value[1] = [
+                        [0, 0],
+                        [0, 0]
+                    ];
+                    update();
+                    onchange && onchange(value);
+                }
+            }
+        }),
+
+        n('br'),
+        n('br'),
+
+        GridView({
+            area: value.value[1],
+            grid,
+            onchange: (newArea) => {
+                value.value[1] = newArea;
+                onchange && onchange(value);
+            }
+        })
+    ]);
+});
+
 /**
  * chosen a area from n * m view
  *
@@ -126,19 +189,9 @@ module.exports = ({
     value,
     onchange
 }, {
-    horizontalGrid,
-    verticalGrid
+    grid
 }) => {
-    // TODO why without div wrapper, won't update in the gridview
-    return n('div', [
-        GridView({
-            horizontalGrid,
-            verticalGrid,
-            area: value.value,
-                onchange: (newArea) => {
-                    value.value = newArea;
-                    onchange && onchange(value);
-                }
-        })
-    ]);
+    return PositionView({
+        value, onchange, grid
+    });
 };

@@ -19,6 +19,7 @@
 
  *
  *
+ * TODO consider inner UI elements or related elements?
  */
 
 let {
@@ -29,108 +30,142 @@ let {
 } = require('leta-ui');
 
 let SimpleForm = require('leta-ui/apply/ui/simpleForm');
-let SimpleInput = require('leta-ui/apply/ui/simpleInput');
+let SimpleList = require('leta-ui/apply/ui/simpleList');
 let PassPredicateUI = require('leta-ui/apply/ui/passPredicateUI');
 
 let AreaChosen = require('./view/areaChosen');
+let ExtractorPatternViewer = require('./view/extractorPatternView');
 
-module.exports = view(({
-    lang = id
-}, {
-    update
-}) => {
+let completeData = (data) => {
+    data.grid = data.grid || [3, 3];
+    if (data.area === undefined) {
+        data.area = [
+            [0, 0],
+            [0, 0]
+        ];
+    }
+
+    data.contentExtractorPatternsMap = data.contentExtractorPatternsMap || {
+        'textContent': ['equal', 'contain', 'regExp'],
+        'imgUrl': ['regExp', 'equal']
+    };
+
+    data.styleExtractorPatternsMap = data.styleExtractorPatternsMap || {
+        'background-color': ['equal'],
+        'font-size': ['equal']
+    };
+
+    data.content = data.content || [];
+    data.style = data.style || [];
+};
+
+module.exports = view((data) => {
+    completeData(data);
+
     let describeUI = method('describeUI'),
 
         describePosition = method('position.describePosition'),
-        defineGrid = method('position.defineGrid'),
-        choseArea = method('position.choseArea'),
 
         describeContent = method('describeContent'),
         describeStyle = method('describeStyle');
 
-    let horizontalGrid = 1,
-        verticalGrid = 1;
+    let {
+        lang = id, contentExtractorPatternsMap, styleExtractorPatternsMap
+    } = data;
 
-    let area = [
-        [0, 0],
-        [0, 0]
-    ];
-
-    return () => {
-        let letaUI = RealLetaUI(
-            describeUI(
-                describePosition(defineGrid(horizontalGrid, verticalGrid), area),
-                describeContent(),
-                describeStyle()
-            ),
-
-            {
-                predicates: {
-                    describeUI: meta((position, content, style) => {
-                        //
-                    }, {
-                        viewer: SimpleForm,
-                        title: lang('describe a UI element')
-                    }),
-
-                    position: {
-                        describePosition: meta((grid, area) => {
-                            console.log(area);
-                        }, {
-                            viewer: N('div', [
-                                n('h3', lang('position')),
-                                N('div style="padding:8px"', [PassPredicateUI])
-                            ]),
-                            args: [null, {
-                                viewer: AreaChosen,
-                                horizontalGrid,
-                                verticalGrid
-                            }]
-                        }),
-
-                        defineGrid: meta((m, n) => {
-                            //
-                            if (m !== horizontalGrid) {
-                                horizontalGrid = m;
-                                area = [
-                                    [0, 0],
-                                    [0, 0]
-                                ]
-                                update();
-                            }
-
-                            if (n !== verticalGrid) {
-                                area = [
-                                    [0, 0],
-                                    [0, 0]
-                                ]
-                                verticalGrid = n;
-                                update();
-                            }
-                        }, {
-                            viewer: N('div', [
-                                n('span', [lang('grid')]),
-                                N('div style="display:inline-block"', [PassPredicateUI])
-                            ]),
-                            args: [{
-                                viewer: N('div style="display:inline-block"', [SimpleInput])
-                            }, {
-                                viewer: N('div style="display:inline-block"', [SimpleInput])
-                            }]
-                        })
-                    },
-
-                    describeContent: meta(() => {}, {}),
-
-                    describeStyle: meta(() => {}, {}),
-                    // TODO other like tag name, attribute values
-                }
-            });
-
-        return n('div', [
-            letaUI
-        ]);
+    let defContentKey = Object.keys(contentExtractorPatternsMap)[0];
+    let defaultContentItem = {
+        extractorType: defContentKey,
+        patternType: contentExtractorPatternsMap[defContentKey][0],
+        pattern: ''
     };
+
+    let defStyleContentKey = Object.keys(styleExtractorPatternsMap)[0];
+    let defaultStyleItem = {
+        extractorType: defStyleContentKey,
+        patternType: styleExtractorPatternsMap[defStyleContentKey][0],
+        pattern: ''
+    };
+
+
+    let ContentView = ExtractorPatternViewer({
+        lang,
+        extractorPatternsMap: contentExtractorPatternsMap
+    });
+
+    let StyleView = ExtractorPatternViewer({
+        lang,
+        extractorPatternsMap: styleExtractorPatternsMap
+    });
+
+    let letaUI = RealLetaUI(
+        describeUI(
+            describePosition([data.grid, data.area]),
+            describeContent(data.content),
+            describeStyle(data.style)
+        ),
+
+        {
+            predicates: {
+                describeUI: meta((position, content, style) => {
+                    return {
+                        position,
+                        content,
+                        style
+                    };
+                }, {
+                    viewer: SimpleForm,
+                    title: lang('describe a UI element')
+                }),
+
+                position: {
+                    describePosition: meta((position) => {
+                        return position;
+                    }, {
+                        viewer: N('div', [
+                            n('h3', lang('position')),
+                            N('div style="padding:8px"', [PassPredicateUI])
+                        ]),
+                        args: [{
+                            viewer: AreaChosen
+                        }]
+                    }),
+                },
+
+                describeContent: meta((content) => {
+                    return content;
+                }, {
+                    viewer: N('div', [
+                        n('h3', lang('content')),
+                        PassPredicateUI
+                    ]),
+                    args: [{
+                        viewer: SimpleList,
+                        itemRender: ContentView,
+                        defaultItem: defaultContentItem
+                    }]
+                }),
+
+                describeStyle: meta((style) => {
+                    return style;
+                }, {
+                    viewer: N('div', [
+                        n('h3', lang('style')),
+                        PassPredicateUI
+                    ]),
+                    args: [{
+                        viewer: SimpleList,
+                        itemRender: StyleView,
+                        defaultItem: defaultStyleItem
+                    }]
+                }),
+                // TODO other like tag name, attribute values
+            }
+        });
+
+    return n('div', [
+        letaUI
+    ]);
 });
 
 const id = v => v;
