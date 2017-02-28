@@ -8,6 +8,9 @@
 
 let udView = require('./udView');
 
+let search = require('./search');
+
 module.exports = {
-    udView
+    udView,
+    search
 };

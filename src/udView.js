@@ -87,7 +87,6 @@ module.exports = view((data) => {
         pattern: ''
     };
 
-
     let ContentView = ExtractorPatternViewer({
         lang,
         extractorPatternsMap: contentExtractorPatternsMap
@@ -108,11 +107,11 @@ module.exports = view((data) => {
         {
             predicates: {
                 describeUI: meta((position, content, style) => {
-                    return {
+                    data.onchange && data.onchange({
                         position,
                         content,
                         style
-                    };
+                    });
                 }, {
                     viewer: SimpleForm,
                     title: lang('describe a UI element')

@@ -3,8 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <title>describe a button in page</title>
+    <style>
+        .chosen {
+            animation-name: flash;
+            animation-duration: 3s;
+            animation-iteration-count: infinite;
+        }
+
+        @keyframes flash {
+          from {
+               opacity: 1;
+          }
+        
+          to {
+               opacity: 0.4;
+          }
+        }
+    </style>
 </head>
-<body>
+<body style="width: 700px">
+    <div id="searchItem" style="position:fixed;right:0px;top:0px;">
+        <button>test</button>
+        <img src="https://avatars3.githubusercontent.com/u/12879029?v=3&s=460" style="width:50px;"/>
+    </div>
     <script src="./assets/app.js"></script>
 </body>
 </html>
