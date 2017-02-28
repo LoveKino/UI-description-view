@@ -8,6 +8,8 @@ let InsideBox = require('./insideBox');
 
 let matchContent = require('./matchContent');
 
+let matchStyle = require('./matchStyle');
+
 /**
  * search target nodes accroding to the description of UI
  *
@@ -26,13 +28,21 @@ module.exports = (nodes, {
 
     let insideBox = InsideBox(gridScope, position);
 
-    return filter(filter(nodes, (node) => {
-        return insideBox(node.getBoundingClientRect());
-    }), (node) => {
-        return any(content, (item) => {
-            return matchContent(node, item);
-        });
-    });
+    return filter(
+        filter(filter(nodes, (node) => {
+            return insideBox(node.getBoundingClientRect());
+        }), (node) => {
+            return any(content, (item) => {
+                return matchContent(node, item);
+            });
+        }),
+
+        (node) => {
+            return any(style, (item) => {
+                return matchStyle(node, item);
+            });
+        }
+    );
 };
 
 function wndsize() {

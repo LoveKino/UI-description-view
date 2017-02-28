@@ -33,6 +33,7 @@
     "bolzano": "^0.1.1",
     "kabanery": "^0.1.6",
     "kabanery-select": "0.0.1",
-    "leta-ui": "^0.1.13"
+    "leta-ui": "^0.1.13",
+    "onecolor": "^3.0.4"
   }
 }
