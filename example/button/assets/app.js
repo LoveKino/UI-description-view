@@ -30069,7 +30069,9 @@ module.exports = (node, {
 
     let content = extractor(node);
     if (extractorType === 'background-color') {
-        pattern = onecolor(pattern).hex();
+        let color = onecolor(pattern);
+        if (!color) return false;
+        pattern = color.hex();
     }
 
     let patternWay = patternMap[patternType];
