@@ -14,7 +14,10 @@ module.exports = (node, {
         return false;
     }
 
+    // extract content from node
     let content = extractor(node);
+    if(content === undefined) return false;
+
     let patternWay = patternMap[patternType];
     if (!patternWay) {
         return false;

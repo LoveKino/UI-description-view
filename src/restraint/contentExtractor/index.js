@@ -3,7 +3,23 @@
 let textContent = require('./textContent');
 let containImgUrl = require('./containImgUrl');
 
+let getAttributeAsContent = (type) => (node) => {
+    return node.getAttribute(type);
+};
+
+let getPlaceholder = getAttributeAsContent('placeholder');
+
+let placeholder = (node) => {
+    let nodeName = node.nodeName && node.nodeName.toLowerCase();
+    if (nodeName !== 'input' && nodeName !== 'textarea') {
+        return undefined; // using undefined as the fail situation
+    }
+
+    return getPlaceholder(node);
+};
+
 module.exports = {
     textContent,
-    containImgUrl
+    containImgUrl,
+    placeholder
 };

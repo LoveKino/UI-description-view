@@ -12,8 +12,11 @@ let search = require('./search');
 
 let gridHelperView = require('./view/gridHelperView');
 
+let blinkView = require('./view/blinkView');
+
 module.exports = {
     udView,
     search,
-    gridHelperView
+    gridHelperView,
+    blinkView
 };

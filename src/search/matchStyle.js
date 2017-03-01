@@ -17,6 +17,8 @@ module.exports = (node, {
     }
 
     let content = extractor(node);
+    if(content === undefined) return false; // using undefined as the fail situation
+
     if (extractorType === 'background-color') {
         let color = onecolor(pattern);
         if (!color) return false;
