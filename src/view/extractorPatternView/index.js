@@ -91,7 +91,7 @@ module.exports = ({
             }),
 
             // write simple pattern
-            n(`input type="text" value=${data.value.pattern}`, {
+            n(`input type="text" value="${data.value.pattern}"`, {
                 oninput: (e) => {
                     data.value.pattern = e.target.value;
                     data.onchange && data.onchange(data.value);
