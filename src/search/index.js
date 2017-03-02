@@ -30,6 +30,8 @@ module.exports = (nodes, {
 
     return filter(
         filter(filter(nodes, (node) => {
+            let rect = node.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) return false; // not showing
             return insideBox(node.getBoundingClientRect());
         }), (node) => {
             return any(content, (item) => {
