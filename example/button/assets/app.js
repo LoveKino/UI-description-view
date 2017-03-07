@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 138);
+/******/ 	return __webpack_require__(__webpack_require__.s = 137);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -2983,16 +2983,16 @@ module.exports = {
  * after description a ui element, we can try to search in the page to find some elements which conform to these descriptions.
  */
 
-let udView = __webpack_require__(133);
+let udView = __webpack_require__(132);
 
-let search = __webpack_require__(129);
+let search = __webpack_require__(128);
 
-let gridHelperView = __webpack_require__(137);
+let gridHelperView = __webpack_require__(136);
 
-let blinkView = __webpack_require__(135);
+let blinkView = __webpack_require__(134);
 
 let {
-    getBoundRect
+    getBoundRect, ImageInnerNode
 } = __webpack_require__(139);
 
 module.exports = {
@@ -3000,7 +3000,8 @@ module.exports = {
     search,
     gridHelperView,
     blinkView,
-    getBoundRect
+    getBoundRect,
+    ImageInnerNode
 };
 
 
@@ -29358,52 +29359,16 @@ module.exports = {
 
 
 let {
-    union, reduce, filter
-} = __webpack_require__(2);
-
-let {
-    ImageInnerNode
-} = __webpack_require__(139);
-
-let expandNodes = (nodes) => {
-    nodes = reduce(nodes, (prev, node) => {
-        // append text node
-        prev = union(prev, filter(node.childNodes, (childNode) => {
-            return childNode.nodeType === 3;
-        }));
-        return prev;
-    }, nodes);
-
-    return reduce(nodes, (prev, node) => {
-        if (node.nodeName.toLowerCase() === 'img') {
-            prev.push(new ImageInnerNode(node));
-        }
-
-        return prev;
-    }, nodes);
-};
-
-module.exports = expandNodes;
-
-
-/***/ }),
-/* 129 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-let {
     filter, any
 } = __webpack_require__(2);
 
-let InsideBox = __webpack_require__(130);
+let InsideBox = __webpack_require__(129);
 
-let matchContent = __webpack_require__(131);
+let matchContent = __webpack_require__(130);
 
-let matchStyle = __webpack_require__(132);
+let matchStyle = __webpack_require__(131);
 
-let expandNodes = __webpack_require__(128);
+let expandNodes = __webpack_require__(138);
 
 let {
     getBoundRect
@@ -29476,7 +29441,7 @@ function wndsize() {
 
 
 /***/ }),
-/* 130 */
+/* 129 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29508,7 +29473,7 @@ let getGridCoord = (scope, [m, n], [t, r]) => {
 
 
 /***/ }),
-/* 131 */
+/* 130 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29542,7 +29507,7 @@ module.exports = (node, {
 
 
 /***/ }),
-/* 132 */
+/* 131 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29583,7 +29548,7 @@ module.exports = (node, {
 
 
 /***/ }),
-/* 133 */
+/* 132 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29622,8 +29587,8 @@ let SimpleForm = __webpack_require__(71);
 let SimpleList = __webpack_require__(72);
 let PassPredicateUI = __webpack_require__(70);
 
-let AreaChosen = __webpack_require__(134);
-let ExtractorPatternViewer = __webpack_require__(136);
+let AreaChosen = __webpack_require__(133);
+let ExtractorPatternViewer = __webpack_require__(135);
 
 let completeData = (data) => {
     data.position = data.position || [
@@ -29761,7 +29726,7 @@ const id = v => v;
 
 
 /***/ }),
-/* 134 */
+/* 133 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29964,7 +29929,7 @@ module.exports = ({
 
 
 /***/ }),
-/* 135 */
+/* 134 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29991,7 +29956,7 @@ module.exports = view(({
 
 
 /***/ }),
-/* 136 */
+/* 135 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30100,7 +30065,7 @@ module.exports = ({
 
 
 /***/ }),
-/* 137 */
+/* 136 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30154,7 +30119,7 @@ module.exports = view(({
 
 
 /***/ }),
-/* 138 */
+/* 137 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30226,6 +30191,42 @@ function wndsize() {
         y: 0
     };
 }
+
+
+/***/ }),
+/* 138 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    union, reduce, filter
+} = __webpack_require__(2);
+
+let {
+    ImageInnerNode
+} = __webpack_require__(139);
+
+let expandNodes = (nodes) => {
+    nodes = reduce(nodes, (prev, node) => {
+        // append text node
+        prev = union(prev, filter(node.childNodes, (childNode) => {
+            return childNode.nodeType === 3;
+        }));
+        return prev;
+    }, nodes);
+
+    return reduce(nodes, (prev, node) => {
+        if (node.nodeName.toLowerCase() === 'img') {
+            prev.push(new ImageInnerNode(node));
+        }
+
+        return prev;
+    }, nodes);
+};
+
+module.exports = expandNodes;
 
 
 /***/ }),
