@@ -2963,10 +2963,15 @@ let regExp = (pattern, content) => {
     return reg.test(content);
 };
 
+let trimEqual = (pattern = '', content = '') => {
+    return pattern.trim() === content.trim();
+};
+
 module.exports = {
     equal,
     contain,
-    regExp
+    regExp,
+    trimEqual
 };
 
 
@@ -29600,9 +29605,9 @@ let completeData = (data) => {
     ];
 
     data.contentExtractorPatternsMap = data.contentExtractorPatternsMap || {
-        'textContent': ['contain', 'equal', 'regExp'],
-        'containImgUrl': ['contain', 'regExp', 'equal'],
-        'placeholder': ['contain', 'equal', 'regExp'],
+        'textContent': ['contain', 'equal', 'regExp', 'trimEqual'],
+        'containImgUrl': ['contain', 'regExp', 'equal', 'trimEqual'],
+        'placeholder': ['contain', 'equal', 'regExp', 'trimEqual'],
     };
 
     data.styleExtractorPatternsMap = data.styleExtractorPatternsMap || {

@@ -13,8 +13,13 @@ let regExp = (pattern, content) => {
     return reg.test(content);
 };
 
+let trimEqual = (pattern = '', content = '') => {
+    return pattern.trim() === content.trim();
+};
+
 module.exports = {
     equal,
     contain,
-    regExp
+    regExp,
+    trimEqual
 };
