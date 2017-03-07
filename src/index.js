@@ -14,9 +14,14 @@ let gridHelperView = require('./view/gridHelperView');
 
 let blinkView = require('./view/blinkView');
 
+let {
+    getBoundRect
+} = require('./util');
+
 module.exports = {
     udView,
     search,
     gridHelperView,
-    blinkView
+    blinkView,
+    getBoundRect
 };

@@ -6,7 +6,12 @@ let {
 
 // TODO inside or not
 module.exports = (node) => {
-    return getImgUrlsIncludeChildren(node).join('\n');
+    if (node.nodeType === 'imageInnerNode') {
+        return node.getImageUrl();
+    }
+    let urls = getImgUrlsIncludeChildren(node);
+    if (!urls.length) return null;
+    return urls.join('\n');
 };
 
 let getImgUrlsIncludeChildren = (node) => {

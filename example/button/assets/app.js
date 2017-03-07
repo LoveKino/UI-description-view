@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 136);
+/******/ 	return __webpack_require__(__webpack_require__.s = 138);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -2983,19 +2983,24 @@ module.exports = {
  * after description a ui element, we can try to search in the page to find some elements which conform to these descriptions.
  */
 
-let udView = __webpack_require__(132);
+let udView = __webpack_require__(133);
 
-let search = __webpack_require__(128);
+let search = __webpack_require__(129);
 
-let gridHelperView = __webpack_require__(135);
+let gridHelperView = __webpack_require__(137);
 
-let blinkView = __webpack_require__(137);
+let blinkView = __webpack_require__(135);
+
+let {
+    getBoundRect
+} = __webpack_require__(139);
 
 module.exports = {
     udView,
     search,
     gridHelperView,
-    blinkView
+    blinkView,
+    getBoundRect
 };
 
 
@@ -29251,7 +29256,12 @@ let {
 
 // TODO inside or not
 module.exports = (node) => {
-    return getImgUrlsIncludeChildren(node).join('\n');
+    if (node.nodeType === 'imageInnerNode') {
+        return node.getImageUrl();
+    }
+    let urls = getImgUrlsIncludeChildren(node);
+    if (!urls.length) return null;
+    return urls.join('\n');
 };
 
 let getImgUrlsIncludeChildren = (node) => {
@@ -29348,14 +29358,56 @@ module.exports = {
 
 
 let {
+    union, reduce, filter
+} = __webpack_require__(2);
+
+let {
+    ImageInnerNode
+} = __webpack_require__(139);
+
+let expandNodes = (nodes) => {
+    nodes = reduce(nodes, (prev, node) => {
+        // append text node
+        prev = union(prev, filter(node.childNodes, (childNode) => {
+            return childNode.nodeType === 3;
+        }));
+        return prev;
+    }, nodes);
+
+    return reduce(nodes, (prev, node) => {
+        if (node.nodeName.toLowerCase() === 'img') {
+            prev.push(new ImageInnerNode(node));
+        }
+
+        return prev;
+    }, nodes);
+};
+
+module.exports = expandNodes;
+
+
+/***/ }),
+/* 129 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
     filter, any
 } = __webpack_require__(2);
 
-let InsideBox = __webpack_require__(129);
+let InsideBox = __webpack_require__(130);
 
-let matchContent = __webpack_require__(130);
+let matchContent = __webpack_require__(131);
 
-let matchStyle = __webpack_require__(131);
+let matchStyle = __webpack_require__(132);
+
+let expandNodes = __webpack_require__(128);
+
+let {
+    getBoundRect
+} = __webpack_require__(139);
 
 /**
  * search target nodes accroding to the description of UI
@@ -29370,6 +29422,7 @@ module.exports = (nodes, {
 }, {
     gridScope
 } = {}) => {
+    nodes = expandNodes(nodes);
     //
     gridScope = gridScope || wndsize();
 
@@ -29377,7 +29430,9 @@ module.exports = (nodes, {
 
     return filter(
         filter(filter(nodes, (node) => {
-            return insideBox(node.getBoundingClientRect());
+            let rect = getBoundRect(node);
+            if (rect.width === 0 || rect.height === 0) return false; // not showing
+            return insideBox(rect);
         }), (node) => {
             return any(content, (item) => {
                 return matchContent(node, item);
@@ -29421,7 +29476,7 @@ function wndsize() {
 
 
 /***/ }),
-/* 129 */
+/* 130 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29452,10 +29507,8 @@ let getGridCoord = (scope, [m, n], [t, r]) => {
 };
 
 
-
-
 /***/ }),
-/* 130 */
+/* 131 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29489,7 +29542,7 @@ module.exports = (node, {
 
 
 /***/ }),
-/* 131 */
+/* 132 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29530,7 +29583,7 @@ module.exports = (node, {
 
 
 /***/ }),
-/* 132 */
+/* 133 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29569,8 +29622,8 @@ let SimpleForm = __webpack_require__(71);
 let SimpleList = __webpack_require__(72);
 let PassPredicateUI = __webpack_require__(70);
 
-let AreaChosen = __webpack_require__(133);
-let ExtractorPatternViewer = __webpack_require__(134);
+let AreaChosen = __webpack_require__(134);
+let ExtractorPatternViewer = __webpack_require__(136);
 
 let completeData = (data) => {
     data.position = data.position || [
@@ -29708,7 +29761,7 @@ const id = v => v;
 
 
 /***/ }),
-/* 133 */
+/* 134 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29911,7 +29964,34 @@ module.exports = ({
 
 
 /***/ }),
-/* 134 */
+/* 135 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    view, n
+} = __webpack_require__(1);
+
+module.exports = view(({
+    left, top, width, height
+}) => {
+    return n('div', {
+        style: {
+            position: 'fixed',
+            left,
+            top,
+            width,
+            height,
+            backgroundColor: 'rgba(200, 100, 100, 0.6)'
+        }
+    });
+});
+
+
+/***/ }),
+/* 136 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30008,7 +30088,7 @@ module.exports = ({
             }),
 
             // write simple pattern
-            n(`input type="text" value=${data.value.pattern}`, {
+            n(`input type="text" value="${data.value.pattern}"`, {
                 oninput: (e) => {
                     data.value.pattern = e.target.value;
                     data.onchange && data.onchange(data.value);
@@ -30020,7 +30100,7 @@ module.exports = ({
 
 
 /***/ }),
-/* 135 */
+/* 137 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30074,14 +30154,14 @@ module.exports = view(({
 
 
 /***/ }),
-/* 136 */
+/* 138 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 let {
-    udView, search, gridHelperView, blinkView
+    udView, search, gridHelperView, blinkView, getBoundRect
 } = __webpack_require__(31);
 
 let gridScope = wndsize();
@@ -30102,14 +30182,15 @@ document.body.appendChild(udView({
             let nodes = search(document.querySelectorAll('#searchItem *'), v, {
                 gridScope
             });
+
             console.log(nodes);
+
             nodes.map((node) => {
-                let bv = blinkView(node.getBoundingClientRect());
+                let bv = blinkView(getBoundRect(node));
                 document.body.appendChild(bv);
+
                 // bink a while in the node's face
-                node.setAttribute('class', 'chosen');
                 setTimeout(() => {
-                    node.setAttribute('class', '');
                     document.body.removeChild(bv);
                 }, 2000);
             });
@@ -30148,30 +30229,61 @@ function wndsize() {
 
 
 /***/ }),
-/* 137 */
+/* 139 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let {
-    view, n
-} = __webpack_require__(1);
+let getBoundRect = (node) => {
+    if (node.nodeType === 3) {
+        let range = document.createRange();
+        range.selectNode(node);
+        let rect = range.getBoundingClientRect();
+        range.detach();
+        return rect;
+    } else {
+        return node.getBoundingClientRect();
+    }
+};
 
-module.exports = view(({
-    left, top, width, height
-}) => {
-    return n('div', {
-        style: {
-            position: 'fixed',
-            left,
-            top,
-            width,
-            height,
-            backgroundColor: 'rgba(200, 100, 100, 0.6)'
-        }
-    });
-});
+let ImageInnerNode = function(imageNode) {
+    this.imageNode = imageNode;
+    this.nodeType = 'imageInnerNode';
+};
+
+ImageInnerNode.prototype.getBoundingClientRect = function() {
+    let rect = this.imageNode.getBoundingClientRect();
+    let imageStyle = window.getComputedStyle(this.imageNode);
+    let paddingLeft = pxToInt(imageStyle.getPropertyValue('padding-left'));
+    let paddingRight = pxToInt(imageStyle.getPropertyValue('padding-right'));
+    let paddingTop = pxToInt(imageStyle.getPropertyValue('padding-top'));
+    let paddingBottom = pxToInt(imageStyle.getPropertyValue('padding-bottom'));
+
+    let rec = {
+        width: rect.width - paddingLeft - paddingRight,
+        height: rect.height - paddingTop - paddingBottom,
+        left: rect.left + paddingLeft,
+        right: rect.right - paddingRight,
+        top: rect.top + paddingTop,
+        bottom: rect.bottom - paddingBottom
+    };
+
+    return rec;
+};
+
+ImageInnerNode.prototype.getImageUrl = function() {
+    return this.imageNode.getAttribute('src');
+};
+
+let pxToInt = (px) => {
+    return Number(px.substring(0, px.length - 2));
+};
+
+module.exports = {
+    getBoundRect,
+    ImageInnerNode
+};
 
 
 /***/ })

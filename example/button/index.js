@@ -1,7 +1,7 @@
 'use strict';
 
 let {
-    udView, search, gridHelperView, blinkView
+    udView, search, gridHelperView, blinkView, getBoundRect
 } = require('../../src');
 
 let gridScope = wndsize();
@@ -22,14 +22,15 @@ document.body.appendChild(udView({
             let nodes = search(document.querySelectorAll('#searchItem *'), v, {
                 gridScope
             });
+
             console.log(nodes);
+
             nodes.map((node) => {
-                let bv = blinkView(node.getBoundingClientRect());
+                let bv = blinkView(getBoundRect(node));
                 document.body.appendChild(bv);
+
                 // bink a while in the node's face
-                node.setAttribute('class', 'chosen');
                 setTimeout(() => {
-                    node.setAttribute('class', '');
                     document.body.removeChild(bv);
                 }, 2000);
             });

@@ -10,6 +10,12 @@ let matchContent = require('./matchContent');
 
 let matchStyle = require('./matchStyle');
 
+let expandNodes = require('./expandNodes');
+
+let {
+    getBoundRect
+} = require('../util');
+
 /**
  * search target nodes accroding to the description of UI
  *
@@ -23,6 +29,7 @@ module.exports = (nodes, {
 }, {
     gridScope
 } = {}) => {
+    nodes = expandNodes(nodes);
     //
     gridScope = gridScope || wndsize();
 
@@ -30,9 +37,9 @@ module.exports = (nodes, {
 
     return filter(
         filter(filter(nodes, (node) => {
-            let rect = node.getBoundingClientRect();
+            let rect = getBoundRect(node);
             if (rect.width === 0 || rect.height === 0) return false; // not showing
-            return insideBox(node.getBoundingClientRect());
+            return insideBox(rect);
         }), (node) => {
             return any(content, (item) => {
                 return matchContent(node, item);

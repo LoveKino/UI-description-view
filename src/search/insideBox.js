@@ -23,5 +23,3 @@ let getGridCoord = (scope, [m, n], [t, r]) => {
         (scope.width / m) * t + scope.x, (scope.height / n) * r + scope.y
     ];
 };
-
-
