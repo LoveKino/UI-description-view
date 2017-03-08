@@ -35,7 +35,9 @@ let PassPredicateUI = require('leta-ui/apply/ui/passPredicateUI');
 
 let AreaChosen = require('./view/areaChosen');
 let ExtractorPatternViewer = require('./view/extractorPatternView');
-let patternMap = require('./patternMap');
+let {
+    contentPatternMap, stylePatternMap
+} = require('./patternMap');
 
 let completeData = (data) => {
     data.position = data.position || [
@@ -46,12 +48,9 @@ let completeData = (data) => {
         ]
     ];
 
-    data.contentExtractorPatternsMap = data.contentExtractorPatternsMap || patternMap;
+    data.contentExtractorPatternsMap = data.contentExtractorPatternsMap || contentPatternMap;
 
-    data.styleExtractorPatternsMap = data.styleExtractorPatternsMap || {
-        'background-color': ['equal'],
-        'font-size': ['equal']
-    };
+    data.styleExtractorPatternsMap = data.styleExtractorPatternsMap || stylePatternMap;
 
     data.content = data.content || [];
     data.style = data.style || [];
