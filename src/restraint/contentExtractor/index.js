@@ -2,6 +2,7 @@
 
 let textContent = require('./textContent');
 let containImgUrl = require('./containImgUrl');
+let imgUrl = require('./imgUrl');
 
 let getAttributeAsContent = (type) => (node) => {
     return node.getAttribute(type);
@@ -21,5 +22,6 @@ let placeholder = (node) => {
 module.exports = {
     textContent,
     containImgUrl,
+    imgUrl,
     placeholder
 };

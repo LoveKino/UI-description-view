@@ -1,5 +1,11 @@
 'use strict';
 
+let urlPatterns = require('./urlPattern');
+
+let {
+    mergeMap
+} = require('bolzano');
+
 let equal = (v1, v2) => v1 === v2;
 
 let contain = (pattern, content) => {
@@ -17,9 +23,9 @@ let trimEqual = (pattern = '', content = '') => {
     return pattern.trim() === content.trim();
 };
 
-module.exports = {
+module.exports = mergeMap(urlPatterns, {
     equal,
     contain,
     regExp,
     trimEqual
-};
+});
