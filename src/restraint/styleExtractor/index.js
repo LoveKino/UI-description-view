@@ -6,7 +6,7 @@ let getStyle = (styleName) => (node) => {
     if (node.nodeType !== 1) return null;
     let ret = window.getComputedStyle(node).getPropertyValue(styleName);
     if (styleName === 'background-color' || styleName === 'color') {
-        ret = onecolor(ret).hex();
+        ret = onecolor(ret).cssa();
     }
     return ret;
 };

@@ -412,7 +412,51 @@ module.exports = {
 
 
 /***/ }),
-/* 3 */,
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+// expression type
+const EXPRESSION_TYPES = ['variable', 'data', 'abstraction', 'predicate'];
+
+const [VARIABLE, JSON_DATA, ABSTRACTION, PREDICATE] = EXPRESSION_TYPES;
+
+const DATA_TYPES = ['number', 'boolean', 'string', 'json', 'null'];
+
+const [NUMBER, BOOLEAN, STRING, JSON_TYPE, NULL] = DATA_TYPES;
+
+const INLINE_TYPES = [NUMBER, BOOLEAN, STRING, NULL];
+
+const DEFAULT_DATA_MAP = {
+    [NUMBER]: 0,
+    [BOOLEAN]: true,
+    [STRING]: '',
+    [JSON_TYPE]: {},
+    [NULL]: null
+};
+
+module.exports = {
+    EXPRESSION_TYPES,
+    VARIABLE,
+    JSON_DATA,
+    ABSTRACTION,
+    PREDICATE,
+
+    DATA_TYPES,
+    NUMBER,
+    BOOLEAN,
+    STRING,
+    JSON_TYPE,
+    NULL,
+    INLINE_TYPES,
+
+    DEFAULT_DATA_MAP
+};
+
+
+/***/ }),
 /* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -523,7 +567,287 @@ module.exports = {
 
 
 /***/ }),
-/* 5 */,
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    dsl, interpreter
+} = __webpack_require__(10);
+
+let {
+    PREDICATE, VARIABLE, JSON_DATA, ABSTRACTION, APPLICATION,
+    NUMBER, BOOLEAN, STRING, JSON_TYPE, NULL, DEFAULT_DATA_MAP
+} = __webpack_require__(3);
+
+let {
+    reduce, get, forEach, map
+} = __webpack_require__(2);
+
+let {
+    isFunction, isObject
+} = __webpack_require__(0);
+
+let getLambdaUiValue = __webpack_require__(84);
+
+let {
+    v, r, method, getJson
+} = dsl;
+
+/**
+ * get lambda from lambda-ui value
+ *
+ * lambda ui value = {
+ *     path,
+ *
+ *     expression,    // for abstraction
+ *
+ *     currentVariables,    // for abstraction
+ *
+ *     params,    // predicate
+ *
+ *     value    // json data
+ * }
+ */
+
+let getLambda = (value) => {
+    let expressionType = getExpressionType(value.path);
+    let predicatePath = getPredicatePath(value.path);
+
+    switch (expressionType) {
+        case VARIABLE:
+            return v(getVariableName(value.path));
+        case ABSTRACTION:
+            if (value.expression === undefined) return new Error('expression is not defined in abstraction');
+            if (value.expression instanceof Error) return value.expression;
+            return r(...value.currentVariables, getLambda(value.expression));
+        case PREDICATE:
+            return method(predicatePath)(...map(value.params, getLambda));
+        case JSON_DATA:
+            return value.value;
+        case APPLICATION:
+            // TODO
+    }
+};
+
+let runner = (predicates) => {
+    let run = interpreter(predicates);
+
+    return (v) => {
+        let ret = getLambda(v);
+        if (ret instanceof Error) {
+            return ret;
+        }
+        try {
+            return run(getJson(ret));
+        } catch (err) {
+            return err;
+        }
+    };
+};
+
+let getVariableName = (path) => {
+    let parts = path.split('.');
+    parts.shift();
+    return parts.join('.');
+};
+
+let getExpressionType = (path = '') => {
+    return path.split('.')[0];
+};
+
+let getPredicatePath = (path = '') => path.split('.').slice(1).join('.');
+
+let expressionTypes = ({
+    predicates,
+    variables,
+    funs
+}) => {
+    let types = {
+        [JSON_DATA]: {
+            [NUMBER]: 1,
+            [BOOLEAN]: 1,
+            [STRING]: 1,
+            [JSON_TYPE]: 1,
+            [NULL]: 1
+        }, // declare json data
+        [PREDICATE]: predicates, // declare function
+        [ABSTRACTION]: 1, // declare function
+        [APPLICATION]: 1
+    };
+
+    if (variables.length) {
+        types.variable = reduce(variables, (prev, cur) => {
+            prev[cur] = 1;
+            return prev;
+        }, {});
+    }
+
+    return reduce(funs, (prev, name) => {
+        if (types[name]) {
+            prev[name] = types[name];
+        }
+        return prev;
+    }, {});
+};
+
+let infixTypes = ({
+    predicates
+}) => {
+    return {
+        [PREDICATE]: predicates
+    };
+};
+
+let getPredicateMetaInfo = (predicatesMetaInfo, predicatePath) => {
+    return get(predicatesMetaInfo, predicatePath) || {};
+};
+
+let getContext = ({
+    predicates,
+    predicatesMetaInfo,
+    variables,
+    funs,
+    pathMapping,
+    nameMap
+}) => {
+    return {
+        predicates,
+        predicatesMetaInfo,
+        variables,
+        funs,
+        pathMapping,
+        nameMap
+    };
+};
+
+let getDataTypePath = (path = '') => path.split('.').slice(1).join('.');
+
+let completeDataWithDefault = (data) => {
+    data.value = data.value || {};
+    data.value.currentVariables = data.value.variables || [];
+    data.variables = data.variables || [];
+    data.funs = data.funs || [JSON_DATA, PREDICATE, ABSTRACTION, VARIABLE];
+    data.onchange = data.onchange || id;
+    data.predicates = data.predicates || {};
+    data.predicatesMetaInfo = data.predicatesMetaInfo || {};
+
+    data.predicates.UI = {};
+    // add UI predicates
+    appendUIAsIds(data.predicates.UI, data.UI);
+
+    completePredicatesMetaInfo(data.predicates, data.predicatesMetaInfo);
+
+    // predicate meta info viewer
+    transitionPredicateMetaViewer(data.predicates, data.predicatesMetaInfo);
+
+    // make title
+    let expresionType = getExpressionType(data.value.path);
+    if (expresionType === PREDICATE) {
+        let predicatePath = getPredicatePath(data.value.path);
+        let {
+            title
+        } = getPredicateMetaInfo(data.predicatesMetaInfo, predicatePath) || {};
+        if (title) {
+            data.title = title;
+        }
+    }
+
+    return data;
+};
+
+let transitionPredicateMetaViewer = (predicates, predicatesMetaInfo) => {
+    forEach(predicates, (v, name) => {
+        let meta = predicatesMetaInfo[name];
+        if (isFunction(v)) {
+            forEach(meta.args, (item) => {
+                if (item && item.viewer) {
+                    let viewer = item.viewer;
+                    item.viewer = (_) => viewer(_, item);
+                }
+            });
+        } else if (isObject(v)) {
+            transitionPredicateMetaViewer(v, meta);
+        }
+    });
+};
+
+let appendUIAsIds = (predicates, UI = {}) => {
+    forEach(UI, (v, name) => {
+        if (isFunction(v)) {
+            predicates[name] = id;
+        } else if (isObject(v)) {
+            predicates[name] = {};
+            appendUIAsIds(v, predicates[name]);
+        }
+    });
+};
+
+let completePredicatesMetaInfo = (predicates, predicatesMetaInfo) => {
+    forEach(predicates, (v, name) => {
+        if (isFunction(v) && v.meta) {
+            predicatesMetaInfo[name] = predicatesMetaInfo[name] || v.meta;
+        }
+
+        predicatesMetaInfo[name] = predicatesMetaInfo[name] || {};
+        predicatesMetaInfo[name].args = predicatesMetaInfo[name].args || [];
+        if (isFunction(v)) {
+            forEach(new Array(v.length), (_, index) => {
+                predicatesMetaInfo[name].args[index] = predicatesMetaInfo[name].args[index] || {};
+            });
+        } else if (v && isObject(v)) {
+            completePredicatesMetaInfo(v, predicatesMetaInfo[name]);
+        }
+    });
+};
+
+let completeValueWithDefault = (value) => {
+    let expresionType = getExpressionType(value.path);
+    if (expresionType === JSON_DATA) {
+        let type = getDataTypePath(value.path);
+        value.value = value.value === undefined ? DEFAULT_DATA_MAP[type] : value.value;
+    } else if (expresionType === PREDICATE) {
+        value.params = value.params || [];
+        value.infix = value.infix || 0;
+    }
+    return value;
+};
+
+let isUIPredicate = (path) => {
+    return /^predicate\.UI\./.test(path);
+};
+
+let getUIPredicatePath = (path) => {
+    let ret = path.match(/^predicate\.UI\.(.*)$/);
+    return ret && ret[1];
+};
+
+let id = v => v;
+
+module.exports = {
+    completeDataWithDefault,
+    getLambda,
+    runner,
+    getExpressionType,
+    getPredicatePath,
+    getVariableName,
+    expressionTypes,
+    infixTypes,
+    getPredicateMetaInfo,
+    getContext,
+    getDataTypePath,
+    completeValueWithDefault,
+
+    getLambdaUiValue,
+
+    isUIPredicate,
+    getUIPredicatePath
+};
+
+
+/***/ }),
 /* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -559,7 +883,28 @@ module.exports = function HSL(color) {
 
 
 /***/ }),
-/* 7 */,
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    n
+} = __webpack_require__(1);
+
+module.exports = (expView, expandor) => {
+    return n('div class="expandor-wrapper"', [
+        // expression
+        n('div class="expression-wrapper"', expView),
+
+        // expandor
+        expandor
+    ]);
+};
+
+
+/***/ }),
 /* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -765,7 +1110,49 @@ module.exports = {
 
 
 /***/ }),
-/* 10 */,
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/**
+ * ח calculus
+ *
+ * e ::=    x       a variable
+ *   |      חx.e    an abstracton (function)
+ *   |      e₁e₂    a (function) application
+ *
+ *
+ * using lambda to transfer data
+ *  1. using apis to construct a lambda
+ *  2. translate lambda to json
+ *  3. sending json
+ *  4. accept json and execute lambda
+ *
+ *
+ *
+ * language: (P, ח, J)
+ *
+ *  1. J meta data set. The format of meta data is json
+ *  2. P: predicate set
+ *
+ * eg: חx.add(x, 1)
+ *      meta data: 1
+ *      variable: x
+ *      predicate: add
+ */
+
+let dsl = __webpack_require__(24);
+let interpreter = __webpack_require__(101);
+
+module.exports = {
+    dsl,
+    interpreter
+};
+
+
+/***/ }),
 /* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -912,7 +1299,58 @@ module.exports = {
 
 
 /***/ }),
-/* 12 */,
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/**
+ * @param direction string
+ *  direction = up | down | left | right
+ */
+module.exports = ({
+    left = 0, right = 0, top = 0, bottom = 0, color = 'black', direction = 'up'
+}) => {
+    if (direction === 'up') {
+        return {
+            width: 0,
+            height: 0,
+            'border-left': `${left}px solid transparent`,
+            'border-right': `${right}px solid transparent`,
+            'border-bottom': `${bottom}px solid ${color}`
+        };
+    } else if (direction === 'down') {
+        return {
+            width: 0,
+            height: 0,
+            'border-left': `${left}px solid transparent`,
+            'border-right': `${right}px solid transparent`,
+            'border-top': `${top}px solid ${color}`
+        };
+    } else if (direction === 'left') {
+        return {
+            width: 0,
+            height: 0,
+            'border-top': `${top}px solid transparent`,
+            'border-bottom': `${bottom}px solid transparent`,
+            'border-right': `${right}px solid ${color}`
+        };
+    } else if (direction === 'right') {
+        return {
+            width: 0,
+            height: 0,
+            'border-top': `${top}px solid transparent`,
+            'border-bottom': `${bottom}px solid transparent`,
+            'border-left': `${left}px solid ${color}`
+        };
+    } else {
+        throw new Error(`unexpeced direction ${direction}`);
+    }
+};
+
+
+/***/ }),
 /* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1020,9 +1458,191 @@ module.exports = iterate;
 
 
 /***/ }),
-/* 14 */,
-/* 15 */,
-/* 16 */,
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let dynamicList = __webpack_require__(46);
+
+let {
+    map, mergeMap
+} = __webpack_require__(2);
+
+let {
+    n
+} = __webpack_require__(1);
+
+let plus = __webpack_require__(47);
+
+let line = __webpack_require__(15);
+
+let Input = ({
+    value = '', onchange, type = 'text', style, placeholder = ''
+}) => {
+    return n(`input type="${type}" placeholder="${placeholder}"`, {
+        value,
+        style,
+        oninput: (e) => {
+            onchange && onchange(e.target.value);
+        }
+    });
+};
+
+module.exports = ({
+    value,
+    defaultItem,
+    title,
+    itemOptions = {}, onchange = id, itemRender = Input
+}) => {
+    return dynamicList({
+        // append or delete items happend
+        onchange: () => onchange(value),
+
+        value,
+
+        defaultItem,
+
+        render: ({
+            appendItem, deleteItem, value
+        }) => {
+            return n('div', {
+                style: {
+                    display: 'inline-block'
+                }
+            }, [
+                n('span', [
+                    n('span', title), n('span', {
+                        style: {
+                            cursor: 'pointer',
+                            paddingLeft: 15,
+                            fontWeight: 'bold'
+                        },
+                        onclick: appendItem
+                    }, n('div', {
+                        style: {
+                            display: 'inline-block'
+                        }
+                    }, plus({
+                        width: 10,
+                        height: 10,
+                        bold: 3,
+                        color: 'black'
+                    })))
+                ]),
+
+                map(value, (item, index) => {
+                    return n('fieldset', [
+                        itemRender(mergeMap(
+                            itemOptions, {
+                                value: item,
+                                onchange: (v) => {
+                                    value[index] = v;
+                                    onchange(value);
+                                }
+                            }
+                        )),
+
+                        n('span', {
+                            style: {
+                                cursor: 'pointer',
+                                fontWeight: 'bold'
+                            },
+                            onclick: () => deleteItem(item, index)
+                        }, n('div', {
+                            style: {
+                                display: 'inline-block',
+                                marginLeft: 5
+                            }
+                        }, [
+                            line({
+                                length: 10,
+                                bold: 3,
+                                color: 'black',
+                                direction: 'horizontal'
+                            })
+                        ]))
+                    ]);
+                })
+            ]);
+        }
+    });
+};
+
+const id = v => v;
+
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    n
+} = __webpack_require__(1);
+
+module.exports = ({
+    color = 'black', bold = 3, length = 20, direction = 'vertical'
+} = {}) => {
+    return direction === 'vertical' ?
+        n('div', {
+            style: {
+                width: bold,
+                height: length,
+                backgroundColor: color
+            }
+        }) : n('div', {
+            style: {
+                height: bold,
+                width: length,
+                backgroundColor: color
+            }
+        });
+};
+
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    n, view
+} = __webpack_require__(1);
+
+/**
+ * data = {
+ *    hide,
+ *    head,
+ *    body
+ * }
+ */
+module.exports = view((data, {
+    update
+}) => {
+    if (data.hide === undefined) data.hide = true;
+
+    let hide = () => update('hide', true);
+    let show = () => update('hide', false);
+    let toggle = () => update('hide', !data.hide);
+    let isHide = () => data.hide;
+
+    let ops = {
+        hide, show, toggle, isHide
+    };
+
+    return n('div', [
+        data.head(ops), !isHide() && data.body(ops)
+    ]);
+});
+
+
+/***/ }),
 /* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1179,8 +1799,325 @@ module.exports = iterate;
 
 
 /***/ }),
-/* 19 */,
-/* 20 */,
+/* 19 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    view, n
+} = __webpack_require__(1);
+
+let {
+    map, compact, mergeMap
+} = __webpack_require__(2);
+
+let {
+    isObject
+} = __webpack_require__(0);
+
+let {
+    getWindowWidth, getWindowHeight
+} = __webpack_require__(53);
+
+let {
+    hasOwnProperty
+} = __webpack_require__(56);
+
+let idgener = __webpack_require__(42);
+
+let triangle = __webpack_require__(52);
+
+/**
+ * @param data Object
+ *  data is a normal js object without circle
+ */
+
+let renderMap = view(({
+    data,
+    hidden,
+    onselected,
+    targetPosition,
+    maxShowItemNum = 10, selectedPath = '', parentPath = '', nameMap = {}
+}, {
+    update
+}) => {
+    let selectedName = selectedPath.split('.')[0];
+    let restPath = selectedPath.substring(selectedName.length + 1);
+    let itemWidth = 164,
+        itemHeight = 16;
+    if (hidden) return null;
+
+    let expandedItem = (item, name) => {
+        let left = 0,
+            top = 0,
+            windowWidth = getWindowWidth(),
+            windowHeight = getWindowHeight();
+
+        if (targetPosition) {
+            left = targetPosition.left - left + itemWidth;
+            top = targetPosition.top + top;
+            if (targetPosition.right + itemWidth > windowWidth) {
+                // show in left
+                left = left - 2 * itemWidth;
+
+                if (targetPosition.left - itemWidth < 0) {
+                    left = targetPosition.left + 10;
+                }
+            }
+            let h = itemHeight * Object.keys(item).length;
+            if (targetPosition.bottom + h > windowHeight) {
+                // show in top
+                top = Math.max(top - h, 10);
+            }
+        }
+
+        return n('div', {
+            style: {
+                position: targetPosition ? 'fixed' : 'relative',
+                left,
+                top,
+                zIndex: 1000
+            }
+        }, renderMap({
+            data: item,
+            selectedPath: restPath,
+            onselected,
+            parentPath: getPath(name, parentPath),
+            nameMap
+        }));
+    };
+
+    return n('ul', {
+        style: {
+            width: itemWidth,
+            maxHeight: maxShowItemNum * itemHeight,
+            overflow: 'scroll',
+            'display': 'inline-block',
+            'margin': 0,
+            'padding': '3 0',
+            border: '1px solid rgba(80, 80, 80, 0.3)',
+            borderRadius: 4,
+            boxShadow: '0px 0px 2px #888888',
+            backgroundColor: 'rgba(244, 244, 244, 0.95)'
+        }
+    }, map(data, (item, name) => {
+        return n('li', {
+            style: {
+                position: 'relative',
+                listStyle: 'none',
+                cursor: 'pointer',
+                minWidth: 100,
+                padding: '5 10',
+                backgroundColor: name === selectedName ? '#3879d9' : 'none',
+                color: name === selectedName ? 'white' : 'black'
+            },
+
+            'class': SELECT_ITEM_HOVER_CLASS,
+
+            onclick: () => {
+                update('hidden', true);
+            }
+        }, [
+            n('div', {
+                style: {
+                    height: 16,
+                    lineHeight: 16
+                }
+            }, [
+                n('div', {
+                    style: {
+                        'float': 'left',
+                        position: 'relative',
+                        width: '95%',
+                        textOverflow: 'ellipsis',
+                        overflow: 'hidden'
+                    }
+                }, [
+                    n('span', hasOwnProperty(nameMap, getPath(name, parentPath)) ? nameMap[getPath(name, parentPath)] : name)
+                ]),
+
+                isObject(item) && [
+                    n('div', {
+                        style: {
+                            'float': 'right',
+                            position: 'relative',
+                            width: '5%',
+                            height: itemHeight
+                        }
+                    }, [
+                        n('div', {
+                            style: mergeMap({
+                                position: 'relative',
+                                top: (itemHeight - 10) / 2
+                            }, triangle({
+                                direction: 'right',
+                                top: 5,
+                                bottom: 5,
+                                left: 10
+                            }))
+                        }),
+                        name === selectedName && expandedItem(item, name),
+                    ])
+                ],
+                n('div', {
+                    style: {
+                        clear: 'both'
+                    }
+                })
+            ]),
+
+            n('div', {
+                style: {
+                    position: 'absolute',
+                    width: '100%',
+                    height: '100%',
+                    left: 0,
+                    top: 0
+                },
+
+                onclick: (e) => {
+                    if (isObject(item)) {
+                        e.stopPropagation();
+                        // expand it
+                        update([
+                            ['selectedPath', name === selectedName ? '' : name],
+                            ['targetPosition', e.target.getBoundingClientRect()]
+                        ]);
+                    } else {
+                        onselected && onselected(item, getPath(name, parentPath));
+                        update('hidden', true);
+                    }
+                }
+            })
+        ]);
+    }));
+});
+
+let getPath = (name, parentPath) => {
+    return compact([parentPath, name]).join('.');
+};
+
+const SELECT_ITEM_HOVER_CLASS = 'select-item-' + idgener().replace(/\./g, '-');
+
+module.exports = (data) => {
+    document.getElementsByTagName('head')[0].appendChild(n('style', {
+        type: 'text/css'
+    }, `.${SELECT_ITEM_HOVER_CLASS}:hover{background-color: #118bfb}`));
+
+    return renderMap(data);
+};
+
+
+/***/ }),
+/* 20 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    likeArray, isObject, funType, isFunction, isUndefined, or, isNumber, isFalsy, mapType
+} = __webpack_require__(0);
+
+/**
+ *
+ * preidcate: chose items to iterate
+ * limit: when to stop iteration
+ * transfer: transfer item
+ * output
+ */
+let iterate = funType((domain = [], opts = {}) => {
+    let {
+        predicate, transfer, output, limit, def
+    } = opts;
+
+    opts.predicate = predicate || truthy;
+    opts.transfer = transfer || id;
+    opts.output = output || toList;
+    if (limit === undefined) limit = domain && domain.length;
+    limit = opts.limit = stopCondition(limit);
+
+    let rets = def;
+    let count = 0;
+
+    if (likeArray(domain)) {
+        for (let i = 0; i < domain.length; i++) {
+            let itemRet = iterateItem(domain, i, count, rets, opts);
+            rets = itemRet.rets;
+            count = itemRet.count;
+            if (itemRet.stop) return rets;
+        }
+    } else if (isObject(domain)) {
+        for (let name in domain) {
+            let itemRet = iterateItem(domain, name, count, rets, opts);
+            rets = itemRet.rets;
+            count = itemRet.count;
+            if (itemRet.stop) return rets;
+        }
+    }
+
+    return rets;
+}, [
+    or(isObject, isFunction, isFalsy),
+    or(isUndefined, mapType({
+        predicate: or(isFunction, isFalsy),
+        transfer: or(isFunction, isFalsy),
+        output: or(isFunction, isFalsy),
+        limit: or(isUndefined, isNumber, isFunction)
+    }))
+]);
+
+let iterateItem = (domain, name, count, rets, {
+    predicate, transfer, output, limit
+}) => {
+    let item = domain[name];
+    if (limit(rets, item, name, domain, count)) {
+        // stop
+        return {
+            stop: true,
+            count,
+            rets
+        };
+    }
+
+    if (predicate(item)) {
+        rets = output(rets, transfer(item, name, domain, rets), name, domain);
+        count++;
+    }
+    return {
+        stop: false,
+        count,
+        rets
+    };
+};
+
+let stopCondition = (limit) => {
+    if (isUndefined(limit)) {
+        return falsy;
+    } else if (isNumber(limit)) {
+        return (rets, item, name, domain, count) => count >= limit;
+    } else {
+        return limit;
+    }
+};
+
+let toList = (prev, v) => {
+    prev.push(v);
+    return prev;
+};
+
+let truthy = () => true;
+
+let falsy = () => false;
+
+let id = v => v;
+
+module.exports = iterate;
+
+
+/***/ }),
 /* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1372,8 +2309,332 @@ module.exports = {
 
 
 /***/ }),
-/* 23 */,
-/* 24 */,
+/* 23 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    likeArray, isObject, funType, isFunction, isUndefined, or, isNumber, isFalsy, mapType
+} = __webpack_require__(0);
+
+/**
+ *
+ * preidcate: chose items to iterate
+ * limit: when to stop iteration
+ * transfer: transfer item
+ * output
+ */
+let iterate = funType((domain = [], opts = {}) => {
+    let {
+        predicate, transfer, output, limit, def
+    } = opts;
+
+    opts.predicate = predicate || truthy;
+    opts.transfer = transfer || id;
+    opts.output = output || toList;
+    if (limit === undefined) limit = domain && domain.length;
+    limit = opts.limit = stopCondition(limit);
+
+    let rets = def;
+    let count = 0;
+
+    if (likeArray(domain)) {
+        for (let i = 0; i < domain.length; i++) {
+            let itemRet = iterateItem(domain, i, count, rets, opts);
+            rets = itemRet.rets;
+            count = itemRet.count;
+            if (itemRet.stop) return rets;
+        }
+    } else if (isObject(domain)) {
+        for (let name in domain) {
+            let itemRet = iterateItem(domain, name, count, rets, opts);
+            rets = itemRet.rets;
+            count = itemRet.count;
+            if (itemRet.stop) return rets;
+        }
+    }
+
+    return rets;
+}, [
+    or(isObject, isFunction, isFalsy),
+    or(isUndefined, mapType({
+        predicate: or(isFunction, isFalsy),
+        transfer: or(isFunction, isFalsy),
+        output: or(isFunction, isFalsy),
+        limit: or(isUndefined, isNumber, isFunction)
+    }))
+]);
+
+let iterateItem = (domain, name, count, rets, {
+    predicate, transfer, output, limit
+}) => {
+    let item = domain[name];
+    if (limit(rets, item, name, domain, count)) {
+        // stop
+        return {
+            stop: true,
+            count,
+            rets
+        };
+    }
+
+    if (predicate(item)) {
+        rets = output(rets, transfer(item, name, domain, rets), name, domain);
+        count++;
+    }
+    return {
+        stop: false,
+        count,
+        rets
+    };
+};
+
+let stopCondition = (limit) => {
+    if (isUndefined(limit)) {
+        return falsy;
+    } else if (isNumber(limit)) {
+        return (rets, item, name, domain, count) => count >= limit;
+    } else {
+        return limit;
+    }
+};
+
+let toList = (prev, v) => {
+    prev.push(v);
+    return prev;
+};
+
+let truthy = () => true;
+
+let falsy = () => false;
+
+let id = v => v;
+
+module.exports = iterate;
+
+
+/***/ }),
+/* 24 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/**
+ * dsl used to contruct lambda json
+ *
+ * ח based on predicates and json expansion
+ *
+ * e ::= json                    as meta data, also a pre-defined π expression
+ *   |   x                       variable
+ *   |   predicate               predicate is a pre-defined abstraction
+ *   |   חx.e                    abstraction
+ *   |   e1e2                    application
+ *
+ * ## translate lambda to json
+ *
+ * 1. meta data
+ *
+ *  j ←→ ['d', j]
+ *
+ * 2. predicate
+ *
+ *  f(x, y, z) ←→ ['p', 'f', [t(x), t(y), t(z)]]
+ *
+ * 3. variable
+ *
+ *  x ←→ ['v', 'x']
+ *
+ * 4. abstraction
+ *
+ *  חx₁x₂...x.e ←→ ['l', ['x₁', 'x₂', ...], t(e)]
+ *
+ * 5. an application
+ *
+ *  e₁e₂e₃... ←→ ['a', [t(e₁), t(e₂), ...]]
+ *
+ * ## usage
+ *
+ * 1. import predicate set
+ *
+ * let add = c.require('add');
+ * let sub = c.require('sub');
+ *
+ * 2. construct lambda
+ *
+ *  - meta
+ *
+ *    just itself
+ *
+ *    e = j
+ *
+ *  - varibale
+ *
+ *    e = c.v('x')
+ *
+ *  - predicate
+ *
+ *    e = add(1, c.v('x'))
+ *
+ *  - abstraction
+ *
+ *    e = c.r(['x'], add(1, c.v('x'))
+ *
+ *  - an application
+ *
+ *    e = e₁(e₂)
+ *
+ *  expression = () => expression
+ *  expression.json
+ */
+
+let {
+    map, contain
+} = __webpack_require__(2);
+
+let {
+    isFunction, likeArray, funType
+} = __webpack_require__(0);
+
+let unique = {};
+
+const EXPRESSION_PREFIXES = ['a', 'p', 'f', 'v', 'd', 'l'];
+const [
+    APPLICATION_PREFIX,
+    PREDICATE_PREFIX,
+    PREDICATE_VARIABLE_PREFIX,
+    VARIABLE_PREFIX,
+    META_DATA_PREFIX,
+    ABSTRACTION_PREFIX
+] = EXPRESSION_PREFIXES;
+
+/**
+ * get expression
+ */
+let exp = (json) => {
+    // application
+    let e = (...args) => {
+        return exp([APPLICATION_PREFIX, getJson(e), map(args, getJson)]);
+    };
+    e.unique = unique;
+    e.json = json;
+    return e;
+};
+
+/**
+ * import predicate
+ */
+let requirePredicate = (...args) => {
+    if (args.length > 1) {
+        return map(args, genPredicate);
+    } else {
+        return genPredicate(args[0]);
+    }
+};
+
+let genPredicate = (name = '') => {
+    let predicate = (...args) => {
+        /**
+         * predicate
+         */
+        return exp([PREDICATE_PREFIX, name.trim(), map(args, getJson)]);
+    };
+    predicate.unique = unique;
+    predicate.json = [PREDICATE_VARIABLE_PREFIX, name];
+
+    return predicate;
+
+};
+
+/**
+ * define variable
+ *
+ * TODO type
+ */
+let v = (name) => exp([VARIABLE_PREFIX, name]);
+
+/**
+ * e → חx₁x₂...x . e
+ */
+let r = (...args) => exp([ABSTRACTION_PREFIX, args.slice(0, args.length - 1), getJson(args[args.length - 1])]);
+
+let isExp = v => isFunction(v) && v.unique === unique;
+
+let getJson = (e) => isExp(e) ? e.json : [META_DATA_PREFIX, e];
+
+let getExpressionType = funType((json) => {
+    let type = json[0];
+    if (!contain(EXPRESSION_PREFIXES, type)) {
+        throw new Error(`unexpected expression type ${json[0]}. The context json is ${JSON.stringify(json, null, 4)}`);
+    }
+    return type;
+}, [likeArray]);
+
+let destruct = (json) => {
+    let type = getExpressionType(json);
+
+    switch (type) {
+        case META_DATA_PREFIX:
+            return {
+                type,
+                metaData: json[1]
+            };
+        case VARIABLE_PREFIX:
+            return {
+                type,
+                variableName: json[1]
+            };
+        case ABSTRACTION_PREFIX:
+            return {
+                abstractionArgs: json[1],
+                abstractionBody: json[2],
+                type,
+            };
+        case PREDICATE_PREFIX:
+            return {
+                predicateName: json[1],
+                predicateParams: json[2],
+                type,
+            };
+        case APPLICATION_PREFIX:
+            return {
+                applicationFun: json[1],
+                applicationParams: json[2],
+                type
+            };
+        case PREDICATE_VARIABLE_PREFIX:
+            return {
+                type,
+                predicateName: json[1]
+            };
+    }
+};
+
+module.exports = {
+    require: requirePredicate,
+    method: requirePredicate,
+    r,
+    v,
+    getJson,
+
+    getExpressionType,
+
+    APPLICATION_PREFIX,
+    PREDICATE_PREFIX,
+    PREDICATE_VARIABLE_PREFIX,
+    VARIABLE_PREFIX,
+    META_DATA_PREFIX,
+    ABSTRACTION_PREFIX,
+
+    EXPRESSION_PREFIXES,
+
+    destruct
+};
+
+
+/***/ }),
 /* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1689,7 +2950,9 @@ module.exports = function XYZ(color) {
 "use strict";
 
 
-let urlPatterns = __webpack_require__(148);
+let urlPattern = __webpack_require__(148);
+
+let colorSimilarityPattern = __webpack_require__(152);
 
 let {
     mergeMap
@@ -1712,12 +2975,15 @@ let trimEqual = (pattern = '', content = '') => {
     return pattern.trim() === content.trim();
 };
 
-module.exports = mergeMap(urlPatterns, {
-    equal,
-    contain,
-    regExp,
-    trimEqual
-});
+module.exports = mergeMap(
+    colorSimilarityPattern,
+    mergeMap(urlPattern, {
+        equal,
+        contain,
+        regExp,
+        trimEqual
+    })
+);
 
 
 /***/ }),
@@ -1885,8 +3151,92 @@ module.exports = {
 /* 34 */,
 /* 35 */,
 /* 36 */,
-/* 37 */,
-/* 38 */,
+/* 37 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let line = __webpack_require__(38);
+let {
+    n
+} = __webpack_require__(1);
+
+module.exports = ({
+    length = 10, bold = 1, color = 'black', angle = 0, direction
+} = {}) => {
+    if (direction === 'left') {
+        angle = 45;
+    } else if (direction === 'top') {
+        angle = 135;
+    } else if (direction === 'right') {
+        angle = 225;
+    } else if (direction === 'bottom') {
+        angle = 315;
+    }
+    return n('div', {
+        style: {
+            display: 'inline-block',
+            transform: `rotate(${angle}deg)`
+        }
+    }, [
+        line({
+            color,
+            bold,
+            length
+        }),
+
+        n('div', {
+            style: {
+                marginLeft: length / 2 - bold / 2,
+                marginTop: -1 * length / 2 - bold / 2
+            }
+        }, [
+            line({
+                color,
+                bold,
+                length,
+                angle: 90
+            })
+        ])
+    ]);
+};
+
+
+/***/ }),
+/* 38 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    n
+} = __webpack_require__(1);
+
+module.exports = ({
+    color = 'black', bold = 3, length = 20, direction = 'vertical', angle = 0
+} = {}) => {
+    return direction === 'vertical' ?
+        n('div', {
+            style: {
+                width: bold,
+                height: length,
+                backgroundColor: color,
+                transform: `rotate(${angle}deg)`
+            }
+        }) : n('div', {
+            style: {
+                height: bold,
+                width: length,
+                backgroundColor: color,
+                transform: `rotate(${angle}deg)`
+            }
+        });
+};
+
+
+/***/ }),
 /* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2089,8 +3439,64 @@ module.exports = startMomenter;
 
 
 /***/ }),
-/* 42 */,
-/* 43 */,
+/* 42 */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(43);
+
+
+/***/ }),
+/* 43 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let count = 0;
+
+module.exports = ({
+    timeVisual = false
+} = {}) => {
+    count++;
+    if (count > 10e6) {
+        count = 0;
+    }
+    let rand = Math.random(Math.random()) + '';
+
+    let time = timeVisual ? getTimeStr() : new Date().getTime();
+
+    return `${time}-${count}-${rand}`;
+};
+
+let getTimeStr = () => {
+    let date = new Date();
+    let month = completeWithZero(date.getMonth() + 1, 2);
+    let dat = completeWithZero(date.getDate(), 2);
+    let hour = completeWithZero(date.getHours(), 2);
+    let minute = completeWithZero(date.getMinutes(), 2);
+    let second = completeWithZero(date.getSeconds(), 2);
+    let ms = completeWithZero(date.getMilliseconds(), 4);
+    return `${date.getFullYear()}_${month}_${dat}_${hour}_${minute}_${second}_${ms}`;
+};
+
+let completeWithZero = (v, len) => {
+    v = v + '';
+    if (v.length < len) {
+        v = repeatLetter('0', len - v.length) + v;
+    }
+    return v;
+};
+
+let repeatLetter = (letter, len) => {
+    let str = '';
+    for (let i = 0; i < len; i++) {
+        str += letter;
+    }
+    return str;
+};
+
+
+/***/ }),
 /* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2306,10 +3712,159 @@ module.exports = {
 
 
 /***/ }),
-/* 46 */,
-/* 47 */,
+/* 46 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    view
+} = __webpack_require__(1);
+
+let {
+    isFunction
+} = __webpack_require__(0);
+
+/**
+ * dynamic list,
+ *   (1) add item
+ *   (2) delete item
+ *   (3) show list
+ *   (4) maintain list data
+ *
+ * @param render function
+ *  render dom by value
+ */
+module.exports = view(({
+    value,
+    defaultItem = '', render, onchange = id,
+}, {
+    update
+}) => {
+    let appendItem = () => {
+        let item = defaultItem;
+        if (isFunction(defaultItem)) {
+            item = defaultItem();
+        } else {
+            item = JSON.parse(JSON.stringify(defaultItem));
+        }
+        value.push(item);
+        onchange({
+            value, type: 'append', item
+        });
+        // update view
+        update();
+    };
+
+    let deleteItem = (item, index) => {
+        if (index !== -1) {
+            value.splice(index, 1);
+            // update view
+            onchange({
+                item, index, type: 'delete', value
+            });
+            update();
+        }
+    };
+
+    return render({
+        value,
+        appendItem,
+        deleteItem
+    });
+});
+
+const id = v => v;
+
+
+/***/ }),
+/* 47 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    n
+} = __webpack_require__(1);
+
+let line = __webpack_require__(15);
+
+module.exports = ({
+    width,
+    height,
+    color,
+    bold
+}) => {
+    return n('div', {
+        style: {
+            width,
+            height,
+            margin: 0, padding: 0
+        }
+    }, [
+        n('div', {
+            style: {
+                position: 'relative',
+                left: 0,
+                top: (height - bold) / 2
+            }
+        }, [
+            line({
+                length: width,
+                bold,
+                color,
+                direction: 'horizontal'
+            })
+        ]),
+
+        n('div', {
+            style: {
+                position: 'relative',
+                top: -1 * bold,
+                left: (width - bold) / 2
+            }
+        }, [
+            line({
+                length: height,
+                bold,
+                color
+            })
+        ])
+    ]);
+};
+
+
+/***/ }),
 /* 48 */,
-/* 49 */,
+/* 49 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    n
+} = __webpack_require__(1);
+
+let angle = __webpack_require__(37);
+
+module.exports = (ops) => {
+    return n('span', {
+        style: {
+            display: 'inline-block',
+            paddingRight: 8
+        }
+    }, angle({
+        direction: ops.isHide() ? 'bottom' : 'top',
+        length: 5,
+        color: '#666666'
+    }));
+};
+
+
+/***/ }),
 /* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2525,13 +4080,649 @@ module.exports = {
 
 
 /***/ }),
-/* 52 */,
-/* 53 */,
-/* 54 */,
-/* 55 */,
-/* 56 */,
-/* 57 */,
-/* 58 */,
+/* 52 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/**
+ * @param direction string
+ *  direction = up | down | left | right
+ */
+module.exports = ({
+    left = 0, right = 0, top = 0, bottom = 0, color = 'black', direction = 'up'
+}) => {
+    if (direction === 'up') {
+        return {
+            width: 0,
+            height: 0,
+            'border-left': `${left}px solid transparent`,
+            'border-right': `${right}px solid transparent`,
+            'border-bottom': `${bottom}px solid ${color}`
+        };
+    } else if (direction === 'down') {
+        return {
+            width: 0,
+            height: 0,
+            'border-left': `${left}px solid transparent`,
+            'border-right': `${right}px solid transparent`,
+            'border-top': `${top}px solid ${color}`
+        };
+    } else if (direction === 'left') {
+        return {
+            width: 0,
+            height: 0,
+            'border-top': `${top}px solid transparent`,
+            'border-bottom': `${bottom}px solid transparent`,
+            'border-right': `${right}px solid ${color}`
+        };
+    } else if (direction === 'right') {
+        return {
+            width: 0,
+            height: 0,
+            'border-top': `${top}px solid transparent`,
+            'border-bottom': `${bottom}px solid transparent`,
+            'border-left': `${left}px solid ${color}`
+        };
+    } else {
+        throw new Error(`unexpeced direction ${direction}`);
+    }
+};
+
+
+/***/ }),
+/* 53 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let shadowFrame = __webpack_require__(54);
+
+let startMomenter = __webpack_require__(55);
+
+let getX = (elem) => {
+    var x = 0;
+    while (elem) {
+        x = x + elem.offsetLeft;
+        elem = elem.offsetParent;
+    }
+    return x;
+};
+
+let getY = (elem) => {
+    var y = 0;
+    while (elem) {
+        y = y + elem.offsetTop;
+        elem = elem.offsetParent;
+    }
+    return y;
+};
+
+let getClientX = (elem) => {
+    return getX(elem) - window.scrollX;
+};
+
+let getClientY = (elem) => {
+    return getY(elem) - window.scrollY;
+};
+
+let removeChilds = (node) => {
+    while (node && node.firstChild) {
+        node.removeChild(node.firstChild);
+    }
+};
+
+let once = (node, type, handler, useCapture) => {
+    let fun = function(e) {
+        let ret = handler.apply(this, [e]);
+        node.removeEventListener(type, fun, useCapture);
+        return ret;
+    };
+
+    node.addEventListener(type, fun, useCapture);
+};
+
+let getAttributeMap = (attributes = []) => {
+    let map = {};
+    for (let i = 0; i < attributes.length; i++) {
+        let {
+            name, value
+        } = attributes[i];
+        map[name] = value;
+    }
+    return map;
+};
+
+let getClasses = (clz = '') => {
+    let ret = [];
+    let items = clz.split(' ');
+    for (let i = 0; i < items.length; i++) {
+        let item = items[i];
+        item = item.trim();
+        if (item) {
+            ret.push(item);
+        }
+    }
+    return ret;
+};
+
+let isMobile = () => {
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        return true;
+    }
+    return false;
+};
+
+let getWindowWidth = () => window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+
+let getWindowHeight = () => window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+
+module.exports = {
+    getX,
+    getY,
+    getClientX,
+    getClientY,
+    getWindowWidth,
+    getWindowHeight,
+    removeChilds,
+    once,
+    shadowFrame,
+    getAttributeMap,
+    startMomenter,
+    getClasses,
+    isMobile
+};
+
+
+/***/ }),
+/* 54 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let shadowFrame = () => {
+    let div = document.createElement('div');
+    let sr = div.createShadowRoot();
+    sr.innerHTML = '<div id="shadow-page"></div>';
+
+    let frame = null;
+
+    let create = () => {
+        let html = document.getElementsByTagName('html')[0];
+        html.appendChild(div);
+
+        return sr.getElementById('shadow-page');
+    };
+
+    let start = () => {
+        if (frame) {
+            return frame;
+        }
+        frame = new Promise(resolve => {
+            if (document.body) {
+                resolve(create());
+            } else {
+                document.addEventListener('DOMContentLoaded', () => {
+                    resolve(create());
+                });
+            }
+        });
+        return frame;
+    };
+
+    let close = () => {
+        frame.then(() => {
+            let parent = div.parentNode;
+            parent && parent.removeChild(div);
+        });
+    };
+
+    return {
+        start,
+        close,
+        sr,
+        rootDiv: div
+    };
+};
+
+module.exports = shadowFrame;
+
+
+/***/ }),
+/* 55 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let isDomReady = (doc) => doc.readyState === 'complete' ||
+    (!doc.attachEvent && doc.readyState === 'interactive');
+
+let startMomenter = (doc = document) => {
+    let loadedFlag = false;
+
+    let resolves = [];
+
+    let docReady = () => {
+        let ready = () => {
+            window.removeEventListener('load', ready, false);
+            doc.removeEventListener('DOMContentLoaded', ready, false);
+
+            if (loadedFlag) return;
+            loadedFlag = true;
+            for (let i = 0; i < resolves.length; i++) {
+                resolves[i]();
+            }
+            resolves = [];
+        };
+
+        doc.addEventListener('DOMContentLoaded', ready, false);
+        window.addEventListener('load', ready, false);
+    };
+
+    docReady();
+
+    // generalWaitTime is used for async rendering
+    return ({
+        generalWaitTime = 0, startTimeout = 10000
+    } = {}) => new Promise((resolve, reject) => {
+        if (loadedFlag || isDomReady(doc)) { // already ready
+            setTimeout(resolve, generalWaitTime);
+        } else { // wait for ready
+            resolves.push(resolve);
+            setTimeout(() => {
+                reject(new Error('timeout'));
+            }, startTimeout);
+        }
+    });
+};
+
+module.exports = startMomenter;
+
+
+/***/ }),
+/* 56 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    reduce
+} = __webpack_require__(57);
+let {
+    funType, isObject, or, isString, isFalsy
+} = __webpack_require__(0);
+
+let defineProperty = (obj, key, opts) => {
+    if (Object.defineProperty) {
+        Object.defineProperty(obj, key, opts);
+    } else {
+        obj[key] = opts.value;
+    }
+    return obj;
+};
+
+let hasOwnProperty = (obj, key) => {
+    if (obj.hasOwnProperty) {
+        return obj.hasOwnProperty(key);
+    }
+    for (var name in obj) {
+        if (name === key) return true;
+    }
+    return false;
+};
+
+let toArray = (v = []) => Array.prototype.slice.call(v);
+
+/**
+ * a.b.c
+ */
+let get = funType((sandbox, name = '') => {
+    name = name.trim();
+    let parts = !name ? [] : name.split('.');
+    return reduce(parts, getValue, sandbox, invertLogic);
+}, [
+    isObject,
+    or(isString, isFalsy)
+]);
+
+let getValue = (obj, key) => obj[key];
+
+let invertLogic = v => !v;
+
+let set = (sandbox, name = '', value) => {
+    name = name.trim();
+    let parts = !name ? [] : name.split('.');
+    let parent = sandbox;
+    if (!isObject(parent)) return;
+    if (!parts.length) return;
+    for (let i = 0; i < parts.length - 1; i++) {
+        let part = parts[i];
+        let next = parent[part];
+        if (!isObject(next)) {
+            next = {};
+            parent[part] = next;
+        }
+        parent = next;
+    }
+
+    parent[parts[parts.length - 1]] = value;
+    return sandbox;
+};
+
+/**
+ * provide property:
+ *
+ * 1. read props freely
+ *
+ * 2. change props by provide token
+ */
+
+let authProp = (token) => {
+    let set = (obj, key, value) => {
+        let temp = null;
+
+        if (!hasOwnProperty(obj, key)) {
+            defineProperty(obj, key, {
+                enumerable: false,
+                configurable: false,
+                set: (value) => {
+                    if (isObject(value)) {
+                        if (value.token === token) {
+                            // save
+                            temp = value.value;
+                        }
+                    }
+                },
+                get: () => {
+                    return temp;
+                }
+            });
+        }
+
+        setProp(obj, key, value);
+    };
+
+    let setProp = (obj, key, value) => {
+        obj[key] = {
+            token,
+            value
+        };
+    };
+
+    return {
+        set
+    };
+};
+
+let evalCode = (code) => {
+    if (typeof code !== 'string') return code;
+    return eval(`(function(){
+    try {
+        ${code}
+    } catch(err) {
+        console.log('Error happened, when eval code.');
+        throw err;
+    }
+})()`);
+};
+
+let delay = (time) => new Promise((resolve) => {
+    setTimeout(resolve, time);
+});
+
+let runSequence = (list, params = [], context, stopV) => {
+    if (!list.length) {
+        return Promise.resolve();
+    }
+    let fun = list[0];
+    try {
+        let v = fun && fun.apply(context, params);
+
+        if (stopV && v === stopV) {
+            return Promise.resolve(stopV);
+        }
+        return Promise.resolve(v).then(() => {
+            return runSequence(list.slice(1), params, context, stopV);
+        });
+    } catch (err) {
+        return Promise.reject(err);
+    }
+};
+
+module.exports = {
+    defineProperty,
+    hasOwnProperty,
+    toArray,
+    get,
+    set,
+    authProp,
+    evalCode,
+    delay,
+    runSequence
+};
+
+
+/***/ }),
+/* 57 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    isObject, funType, or, isString, isFalsy, likeArray
+} = __webpack_require__(0);
+
+let iterate = __webpack_require__(20);
+
+let {
+    map, reduce, find, findIndex, forEach, filter, any, exist, compact
+} = __webpack_require__(58);
+
+let contain = (list, item, fopts) => findIndex(list, item, fopts) !== -1;
+
+let difference = (list1, list2, fopts) => {
+    return reduce(list1, (prev, item) => {
+        if (!contain(list2, item, fopts) &&
+            !contain(prev, item, fopts)) {
+            prev.push(item);
+        }
+        return prev;
+    }, []);
+};
+
+let union = (list1, list2, fopts) => deRepeat(list2, fopts, deRepeat(list1, fopts));
+
+let mergeMap = (map1 = {}, map2 = {}) => reduce(map2, setValueKey, reduce(map1, setValueKey, {}));
+
+let setValueKey = (obj, value, key) => {
+    obj[key] = value;
+    return obj;
+};
+
+let interset = (list1, list2, fopts) => {
+    return reduce(list1, (prev, cur) => {
+        if (contain(list2, cur, fopts)) {
+            prev.push(cur);
+        }
+        return prev;
+    }, []);
+};
+
+let deRepeat = (list, fopts, init = []) => {
+    return reduce(list, (prev, cur) => {
+        if (!contain(prev, cur, fopts)) {
+            prev.push(cur);
+        }
+        return prev;
+    }, init);
+};
+
+/**
+ * a.b.c
+ */
+let get = funType((sandbox, name = '') => {
+    name = name.trim();
+    let parts = !name ? [] : name.split('.');
+    return reduce(parts, getValue, sandbox, invertLogic);
+}, [
+    isObject,
+    or(isString, isFalsy)
+]);
+
+let getValue = (obj, key) => obj[key];
+
+let invertLogic = v => !v;
+
+let delay = (time) => new Promise((resolve) => {
+    setTimeout(resolve, time);
+});
+
+let flat = (list) => {
+    if (likeArray(list) && !isString(list)) {
+        return reduce(list, (prev, item) => {
+            prev = prev.concat(flat(item));
+            return prev;
+        }, []);
+    } else {
+        return [list];
+    }
+};
+
+module.exports = {
+    flat,
+    contain,
+    difference,
+    union,
+    interset,
+    map,
+    reduce,
+    iterate,
+    find,
+    findIndex,
+    deRepeat,
+    forEach,
+    filter,
+    any,
+    exist,
+    get,
+    delay,
+    mergeMap,
+    compact
+};
+
+
+/***/ }),
+/* 58 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let iterate = __webpack_require__(20);
+
+let defauls = {
+    eq: (v1, v2) => v1 === v2
+};
+
+let setDefault = (opts, defauls) => {
+    for (let name in defauls) {
+        opts[name] = opts[name] || defauls[name];
+    }
+};
+
+let forEach = (list, handler) => iterate(list, {
+    limit: (rets) => {
+        if (rets === true) return true;
+        return false;
+    },
+    transfer: handler,
+    output: (prev, cur) => cur,
+    def: false
+});
+
+let map = (list, handler, limit) => iterate(list, {
+    transfer: handler,
+    def: [],
+    limit
+});
+
+let reduce = (list, handler, def, limit) => iterate(list, {
+    output: handler,
+    def,
+    limit
+});
+
+let filter = (list, handler, limit) => reduce(list, (prev, cur, index, list) => {
+    handler && handler(cur, index, list) && prev.push(cur);
+    return prev;
+}, [], limit);
+
+let find = (list, item, fopts) => {
+    let index = findIndex(list, item, fopts);
+    if (index === -1) return undefined;
+    return list[index];
+};
+
+let any = (list, handler) => reduce(list, (prev, cur, index, list) => {
+    let curLogic = handler && handler(cur, index, list);
+    return prev && originLogic(curLogic);
+}, true, falsyIt);
+
+let exist = (list, handler) => reduce(list, (prev, cur, index, list) => {
+    let curLogic = handler && handler(cur, index, list);
+    return prev || originLogic(curLogic);
+}, false, originLogic);
+
+let findIndex = (list, item, fopts = {}) => {
+    setDefault(fopts, defauls);
+
+    let {
+        eq
+    } = fopts;
+    let predicate = (v) => eq(item, v);
+    let ret = iterate(list, {
+        transfer: indexTransfer,
+        limit: onlyOne,
+        predicate,
+        def: []
+    });
+    if (!ret.length) return -1;
+    return ret[0];
+};
+
+let compact = (list) => reduce(list, (prev, cur) => {
+    if (cur) prev.push(cur);
+    return prev;
+}, []);
+
+let indexTransfer = (item, index) => index;
+
+let onlyOne = (rets, item, name, domain, count) => count >= 1;
+
+let falsyIt = v => !v;
+
+let originLogic = v => !!v;
+
+module.exports = {
+    map,
+    forEach,
+    reduce,
+    find,
+    findIndex,
+    filter,
+    any,
+    exist,
+    compact
+};
+
+
+/***/ }),
 /* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -3406,57 +5597,2427 @@ module.exports = View;
 
 /***/ }),
 /* 70 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-throw new Error("Module build failed: Error: ENOENT: no such file or directory, open '/Users/yuer/workspaceforme/category/career/container/common/ui/UI-description-view/node_modules/leta-ui/apply/ui/passPredicateUI.js'");
+"use strict";
+
+
+let {
+    PREDICATE
+} = __webpack_require__(3);
+
+let PassPredicateUI = ({
+    getSuffixParams
+}) => {
+    return getSuffixParams(0);
+};
+
+PassPredicateUI.detect = ({
+    expressionType
+}) => {
+    return expressionType === PREDICATE;
+};
+
+module.exports = PassPredicateUI;
+
 
 /***/ }),
 /* 71 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-throw new Error("Module build failed: Error: ENOENT: no such file or directory, open '/Users/yuer/workspaceforme/category/career/container/common/ui/UI-description-view/node_modules/leta-ui/apply/ui/simpleForm.js'");
+"use strict";
+
+
+let {
+    n
+} = __webpack_require__(1);
+
+let {
+    map
+} = __webpack_require__(2);
+
+let {
+    PREDICATE
+} = __webpack_require__(3);
+
+let form = ({
+    value,
+    expressionType,
+    getSuffixParams
+}, {
+    title
+} = {}) => {
+    let parts = value.path.split('.');
+    title = title || parts[parts.length - 1];
+
+    return n('form class="expression-wrapper"', {
+        onclick: (e) => {
+            e.preventDefault();
+        }
+    }, [
+        n('h3', title),
+
+        map(getSuffixParams(0), (item) => {
+            return n('div', {
+                style: {
+                    padding: 8
+                }
+            }, item);
+        })
+    ]);
+};
+
+form.detect = ({
+    expressionType
+}) => {
+    return expressionType === PREDICATE;
+};
+
+module.exports = form;
+
 
 /***/ }),
 /* 72 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-throw new Error("Module build failed: Error: ENOENT: no such file or directory, open '/Users/yuer/workspaceforme/category/career/container/common/ui/UI-description-view/node_modules/leta-ui/apply/ui/simpleList.js'");
+"use strict";
+
+
+let InputList = __webpack_require__(14);
+
+let {
+    JSON_DATA
+} = __webpack_require__(3);
+
+let {
+    n
+} = __webpack_require__(1);
+
+let {
+    mergeMap
+} = __webpack_require__(2);
+
+let simpleList = ({
+    value,
+    onchange
+}, {
+    defaultItem,
+    title,
+    itemRender,
+
+    itemOptions = {}
+}) => {
+    let onValueChanged = (v) => {
+        value.value = v;
+        onchange(value);
+    };
+
+    return InputList({
+        onchange: onValueChanged,
+
+        value: value.value,
+        defaultItem,
+        itemRender,
+        itemOptions: mergeMap({
+            style: {
+                marginLeft: 10
+            }
+        }, itemOptions),
+
+        title: n('span', {
+            style: {
+                paddingLeft: 12,
+                color: '#666666'
+            }
+        }, [title])
+    });
+};
+
+simpleList.detect = ({
+    expresionType
+}) => expresionType === JSON_DATA;
+
+module.exports = simpleList;
+
 
 /***/ }),
 /* 73 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-throw new Error("Module build failed: Error: ENOENT: no such file or directory, open '/Users/yuer/workspaceforme/category/career/container/common/ui/UI-description-view/node_modules/leta-ui/index.js'");
+module.exports = __webpack_require__(77);
+
 
 /***/ }),
-/* 74 */,
-/* 75 */,
-/* 76 */,
-/* 77 */,
-/* 78 */,
-/* 79 */,
-/* 80 */,
-/* 81 */,
-/* 82 */,
-/* 83 */,
-/* 84 */,
-/* 85 */,
-/* 86 */,
-/* 87 */,
-/* 88 */,
-/* 89 */,
-/* 90 */,
-/* 91 */,
-/* 92 */,
-/* 93 */,
-/* 94 */,
-/* 95 */,
-/* 96 */,
-/* 97 */,
-/* 98 */,
-/* 99 */,
-/* 100 */,
-/* 101 */,
+/* 74 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    getPredicateMetaInfo,
+    getPredicatePath,
+    infixTypes
+} = __webpack_require__(5);
+
+let {
+    get
+} = __webpack_require__(2);
+
+module.exports = ({
+    data,
+    onExpand,
+    onselected,
+
+    ExpandorView
+}) => {
+    let {
+        predicates
+    } = data;
+
+    let options = infixTypes({
+        predicates
+    });
+
+    return ExpandorView({
+        hide: data.hideExpressionExpandor,
+
+        options,
+
+        onExpand: (hide) => {
+            data.hideExpressionExpandor = hide;
+            data.infixPath = null;
+            onExpand && onExpand();
+        },
+
+        onselected: (v, path) => {
+            data.infixPath = path;
+            data.title = get(getPredicateMetaInfo(data.predicatesMetaInfo, getPredicatePath(path)), 'args.0.name');
+            data.hideExpressionExpandor = true;
+            onselected && onselected(v, path);
+        }
+    });
+};
+
+
+
+/***/ }),
+/* 75 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    getPredicatePath, getPredicateMetaInfo
+} = __webpack_require__(5);
+
+let {
+    map, mergeMap
+} = __webpack_require__(2);
+
+let getArgs = ({
+    value,
+    predicatesMetaInfo
+}) => {
+    let predicatePath = getPredicatePath(value.path);
+    let {
+        args
+    } = getPredicateMetaInfo(predicatesMetaInfo, predicatePath) || {};
+    return args || [];
+};
+
+const id = v => v;
+
+let getParamer = (data, {
+    itemRender
+}) => (index) => {
+    let {
+        value,
+        onchange = id
+    } = data;
+
+    let args = getArgs(data);
+
+    let opts = args[index] || {};
+
+    return itemRender(mergeMap(opts, {
+        title: opts.name,
+
+        value: mergeMap(value.params[index] || {}, opts.value || {}),
+
+        onchange: (itemValue) => {
+            // update by index
+            value.params[index] = itemValue;
+            onchange(value);
+        }
+    }));
+};
+
+let getPrefixParamser = (data, {
+    itemRender
+}) => (infix = 0) => {
+    let {
+        value,
+        onchange = id
+    } = data;
+
+    let args = getArgs(data);
+
+    let params = value.params.slice(0, infix);
+
+    return map(args.slice(0, infix), (opts, index) => {
+        opts = opts || {};
+
+        return itemRender(mergeMap(opts, {
+            title: opts.name,
+
+            value: mergeMap(params[index] || {}, opts.value || {}),
+
+            onchange: (itemValue) => {
+                params[index] = itemValue;
+                value.params = params.concat(value.params.slice(infix));
+                onchange(value);
+            }
+        }));
+    });
+};
+
+let getSuffixParamser = (data, {
+    itemRender
+}) => (infix = 0) => {
+    let {
+        value,
+        onchange = id
+    } = data;
+
+    let args = getArgs(data);
+
+    let params = value.params.slice(infix);
+
+    return map(args.slice(infix), (opts, index) => {
+        opts = opts || {};
+
+        return itemRender(mergeMap(opts, {
+            title: opts.name,
+
+            value: mergeMap(params[index] || {}, opts.value || {}),
+
+            onchange: (itemValue) => {
+                params[index] = itemValue;
+                value.params = value.params.slice(0, infix).concat(params);
+                onchange(value);
+            }
+        }));
+    });
+};
+
+module.exports = {
+    getPrefixParamser,
+    getSuffixParamser,
+    getParamer
+};
+
+
+/***/ }),
+/* 76 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let EmptyExpressionView = __webpack_require__(79);
+
+let JsonDataView = __webpack_require__(80);
+
+let AbstractionView = __webpack_require__(78);
+
+let PredicateView = __webpack_require__(81);
+
+let VariableView = __webpack_require__(82);
+
+let {
+    getExpressionType,
+    getPredicatePath,
+    getPredicateMetaInfo
+} = __webpack_require__(5);
+
+let {
+    JSON_DATA,
+    ABSTRACTION,
+    VARIABLE,
+    PREDICATE
+} = __webpack_require__(3);
+
+/**
+ * choose the viewer to render expression
+ *
+ * @param viewer
+ *  pre-defined render function
+ *  TODO add test function for viewer as graceful degradation
+ */
+module.exports = ({
+    value, viewer, predicatesMetaInfo
+}, options) => {
+    // exists pre-defined viewer
+    if (viewer) {
+        if (!viewer.detect) {
+            return viewer;
+        } else {
+            // detect
+            if (viewer.detect(options)) {
+                return viewer;
+            }
+        }
+    }
+
+    let expressionType = getExpressionType(value.path);
+
+    if (expressionType === PREDICATE) {
+        // find pre-defined predicate function level viewer
+        let metaInfo = getPredicateMetaInfo(predicatesMetaInfo, getPredicatePath(value.path));
+        if (metaInfo.viewer) {
+            return (expOptions) => metaInfo.viewer(expOptions, metaInfo);
+        }
+    }
+
+    // choose the default expresion viewer
+    switch (expressionType) {
+        case PREDICATE:
+            return PredicateView;
+        case JSON_DATA:
+            return JsonDataView;
+        case VARIABLE:
+            return VariableView;
+        case ABSTRACTION:
+            return AbstractionView;
+        default:
+            return EmptyExpressionView;
+    }
+};
+
+
+/***/ }),
+/* 77 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let LetaUIView = __webpack_require__(83);
+
+let {
+    runner, getLambdaUiValue
+} = __webpack_require__(5);
+
+let {
+    dsl
+} = __webpack_require__(10);
+
+let {
+    mergeMap
+} = __webpack_require__(2);
+
+let meta = __webpack_require__(88);
+
+let {
+    getJson, method, v, r
+} = dsl;
+
+let LetaUI = (...args) => {
+    let data = getData(args);
+    let runLeta = runner(data.predicates);
+
+    return LetaUIView(mergeMap(data, {
+        onchange: (v) => {
+            data.onchange && data.onchange(v, {
+                runLeta
+            });
+        },
+
+        runLeta
+    }));
+};
+
+let getData = (args) => {
+    let data = null;
+    if (args.length === 1) {
+        data = args[0];
+    } else if (args.length === 2) {
+        data = args[1];
+        data.value = getLambdaUiValue(
+            getJson(args[0])
+        ); // convert lambda json
+    } else {
+        throw new Error(`unexpected number of arguments. Expect one or two but got ${args.length}`);
+    }
+
+    data = data || {};
+
+    return data;
+};
+
+let RealLetaUI = (...args) => {
+    let data = getData(args);
+    data.onchange = data.onchange || realOnchange;
+    return LetaUI(data);
+};
+
+let realOnchange = (v, {
+    runLeta
+}) => {
+    runLeta(v);
+};
+
+module.exports = {
+    method,
+    v,
+    r,
+    meta,
+    runner,
+
+    LetaUI,
+    RealLetaUI
+};
+
+
+/***/ }),
+/* 78 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    n, view
+} = __webpack_require__(1);
+
+let VariableDeclareView = __webpack_require__(97);
+
+let expandorWrapper = __webpack_require__(7);
+
+let {
+    VARIABLE
+} = __webpack_require__(3);
+
+module.exports = view(({
+    value,
+    variables,
+    getOptionsView,
+    getExpandor,
+    onchange,
+    expressionBody
+}, {
+    update
+}) => {
+    return () => expandorWrapper(n('div', [
+        getOptionsView(),
+
+        n('div', {
+            style: {
+                marginLeft: 15,
+                marginTop: 5,
+                padding: 5
+            }
+        }, [
+            n('div', {
+                style: {
+                    border: '1px solid rgba(200, 200, 200, 0.4)',
+                    borderRadius: 5,
+                    padding: 5
+                }
+            }, [
+                VariableDeclareView({
+                    onchange: (v) => {
+                        value.currentVariables = v;
+                        expressionBody.updateVariables(variables.concat(value.currentVariables));
+                        onchange(value);
+                        update();
+                    },
+
+                    variables: value.currentVariables,
+                    prevVariables: variables,
+                    title: VARIABLE,
+                })
+            ]),
+
+            n('div', {
+                style: {
+                    marginTop: 5
+                }
+            }, [
+                expressionBody.getView()
+            ])
+        ])
+    ]), getExpandor());
+});
+
+
+/***/ }),
+/* 79 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let expandorWrapper = __webpack_require__(7);
+
+module.exports = ({
+    getOptionsView,
+    getExpandor
+}) => {
+    return expandorWrapper(getOptionsView(), getExpandor());
+};
+
+
+/***/ }),
+/* 80 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    n, view
+} = __webpack_require__(1);
+
+let {
+    contain
+} = __webpack_require__(2);
+
+let fold = __webpack_require__(16);
+
+let foldArrow = __webpack_require__(49);
+
+let {
+    isObject
+} = __webpack_require__(0);
+
+let InputView = __webpack_require__(91);
+
+let expandorWrapper = __webpack_require__(7);
+
+const {
+    INLINE_TYPES, DEFAULT_DATA_MAP
+} = __webpack_require__(3);
+
+let {
+    getDataTypePath
+} = __webpack_require__(5);
+
+/**
+ * used to define json data
+ */
+module.exports = view(({
+    value, onchange = id, getOptionsView, getExpandor
+}) => {
+    let type = getDataTypePath(value.path);
+
+    let onValueChanged = (v) => {
+        value.value = v;
+        onchange(value);
+    };
+
+    let renderInputArea = () => {
+        return InputView({
+            content: value.value || DEFAULT_DATA_MAP[type],
+            type: value.type,
+            placeholder: value.placeholder,
+            onchange: onValueChanged
+        }, type);
+    };
+
+    return expandorWrapper(n('div', {
+        style: {
+            border: contain(INLINE_TYPES, type) ? '0' : '1px solid rgba(200, 200, 200, 0.4)',
+            minWidth: 160
+        }
+    }, [
+        getOptionsView(),
+
+        n('div', {
+            style: {
+                display: !type ? 'block' : contain(INLINE_TYPES, type) ? 'inline-block' : 'block'
+            }
+        }),
+
+        !contain(INLINE_TYPES, type) ? fold({
+            head: (ops) => n('div', {
+                style: {
+                    textAlign: 'right',
+                    cursor: 'pointer'
+                },
+                'class': 'lambda-ui-hover',
+                onclick: () => {
+                    ops.toggle();
+                }
+            }, [
+                ops.isHide() && n('span', {
+                    style: {
+                        color: '#9b9b9b',
+                        paddingRight: 60
+                    }
+                }, abbreText(value.value)),
+
+                foldArrow(ops)
+            ]),
+
+            body: renderInputArea,
+            hide: false
+        }) : renderInputArea()
+    ]), getExpandor());
+});
+
+let abbreText = (data) => {
+    let str = data;
+    if (isObject(data)) {
+        str = JSON.stringify(data);
+    }
+    if (str.length > 30) {
+        return str.substring(0, 27) + '...';
+    }
+    return str;
+};
+
+const id = v => v;
+
+
+/***/ }),
+/* 81 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    n, view
+} = __webpack_require__(1);
+
+let {
+    map
+} = __webpack_require__(2);
+
+let expandorWrapper = __webpack_require__(7);
+
+module.exports = view(({
+    value,
+    getOptionsView,
+    getExpandor,
+    getPrefixParams,
+    getSuffixParams
+}) => {
+    return expandorWrapper(n('div', [
+        arrangeItems(getPrefixParams(value.infix)),
+
+        getOptionsView(),
+
+        n('div', {
+            style: {
+                display: value.infix ? 'inline-block' : 'block'
+            }
+        }, [
+            arrangeItems(getSuffixParams(value.infix))
+        ])
+    ]), getExpandor());
+});
+
+let arrangeItems = (itemViews) => n('div', {
+    'class': 'lambda-params',
+    style: {
+        display: 'inline-block'
+    }
+}, [
+    map(itemViews, (itemView) => {
+        return n('fieldset', {
+            style: {
+                padding: '4px'
+            }
+        }, itemView);
+    })
+]);
+
+
+/***/ }),
+/* 82 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    n, view
+} = __webpack_require__(1);
+
+let expandorWrapper = __webpack_require__(7);
+
+module.exports = view(({
+    getOptionsView, getExpandor
+}) => {
+    return () => expandorWrapper(n('div', [getOptionsView()]), getExpandor());
+});
+
+
+/***/ }),
+/* 83 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    view, n
+} = __webpack_require__(1);
+
+let ExpandorComponent = __webpack_require__(74);
+
+let TreeOptionView = __webpack_require__(96);
+
+let Expandor = __webpack_require__(89);
+
+let {
+    getPrefixParamser,
+    getSuffixParamser,
+    getParamer
+} = __webpack_require__(75);
+
+let {
+    mergeMap, get, map
+} = __webpack_require__(2);
+
+let getExpressionViewer = __webpack_require__(76);
+
+const style = __webpack_require__(87);
+
+let {
+    JSON_DATA,
+    ABSTRACTION,
+    VARIABLE,
+    PREDICATE
+} = __webpack_require__(3);
+
+let {
+    getExpressionType,
+    completeDataWithDefault,
+    completeValueWithDefault,
+    expressionTypes,
+    isUIPredicate,
+    getUIPredicatePath
+} = __webpack_require__(5);
+
+/**
+ * lambda UI editor
+ *
+ * π calculus
+ *
+ * e ::= x              a variable
+ *   |   חx.e           an abstraction (function)
+ *   |   e₁e₂           a (function) application
+ *
+ * 1. meta data
+ *    json
+ *
+ * 2. predicate
+ *    f(x, ...)
+ *
+ * 3. variable
+ *    x
+ *
+ * 4. abstraction
+ *    חx₁x₂...x.e
+ *
+ * 5. application
+ *    e₁e₂e₃...
+ *
+ * ח based on predicates and json expansion
+ *
+ * e ::= json                    as meta data, also a pre-defined π expression
+ *   |   x                       variable
+ *   |   predicate               predicate is a pre-defined abstraction
+ *   |   חx.e                    abstraction
+ *   |   e1e2                    application
+ */
+
+/**
+ * expression user interface
+ *
+ * 1. user choses expression type
+ * 2. define current expression type
+ *
+ * data = {
+ *      predicates,
+ *      predicatesMetaInfo: {
+ *          ... {
+ *              args: [{
+ *                  name,
+ *                  defaultValue: value
+ *              }]
+ *          }
+ *      },
+ *
+ *      value: {
+ *          path
+ *      }
+ * }
+ *
+ * TODO: application option
+ */
+module.exports = view((data = {}) => {
+    style({
+        style: data.styleStr
+    });
+
+    return n('div', {
+        'class': 'lambda-ui'
+    }, [
+        expressionView(data)
+    ]);
+});
+
+let expressionView = view((data, {
+    update
+}) => {
+    data = completeDataWithDefault(data);
+
+    return () => {
+        let {
+            value,
+            infixPath,
+
+            // events
+            onchange,
+
+            runLeta
+        } = data;
+
+        completeValueWithDefault(value);
+
+        if (isUIPredicate(value.path)) {
+            //
+            let render = get(data.UI, getUIPredicatePath(value.path));
+            return expressionView(mergeMap(data, {
+                viewer: (expOptions) => render(expOptions, ...map(value.params.slice(1), (item) => {
+                    return runLeta(item);
+                })),
+                value: value.params[0]
+            }));
+        }
+
+        if (data.infixPath) {
+            return expressionView(mergeMap(data, {
+                infixPath: null,
+                value: {
+                    path: infixPath,
+                    params: [value],
+                    infix: 1
+                }
+            }));
+        }
+
+        onchange(value);
+
+        let expressionOptions = getExpressionViewOptions(data, update);
+        return getExpressionViewer(data, expressionOptions)(expressionOptions);
+    };
+});
+
+let getExpressionViewOptions = (data, update) => {
+    let {
+        value,
+        variables,
+
+        // global config
+        predicates,
+        predicatesMetaInfo,
+        UI,
+        nameMap,
+
+        // ui states
+        title,
+        guideLine,
+        showSelectTree,
+
+        // events
+        onchange,
+
+        runLeta
+    } = data;
+
+    let globalConfig = {
+        predicates,
+        runLeta,
+        UI,
+        predicatesMetaInfo,
+        nameMap
+    };
+
+    let getOptionsView = (OptionsView = TreeOptionView) => OptionsView({
+        path: value.path,
+        data: expressionTypes(data),
+        title,
+        guideLine,
+        showSelectTree,
+        nameMap,
+        onselected: (v, path) => {
+            update([
+                ['value.path', path],
+                ['showSelectTree', false]
+            ]);
+        }
+    });
+
+    let getExpandor = (ExpandorView = Expandor) => data.value.path && ExpandorComponent({
+        onExpand: (hide) => {
+            update();
+            data.onexpandchange && data.onexpandchange(hide, data);
+        },
+
+        onselected: () => {
+            update();
+        },
+
+        data,
+
+        ExpandorView
+    });
+
+    let getAbstractionBody = () => {
+        let expressionViewObj = mergeMap(globalConfig, {
+            title: 'expression',
+            value: value.expression,
+            variables: variables.concat(value.currentVariables),
+            onchange: (lambda) => {
+                value.expression = lambda;
+                onchange && onchange(value);
+            }
+        });
+
+        return {
+            getView: () => {
+                return expressionView(expressionViewObj);
+            },
+
+            updateVariables: (vars) => {
+                expressionViewObj.variables = vars;
+            }
+        };
+    };
+
+    let prefixParamItemRender = (opts) => expressionView(
+        mergeMap(mergeMap(globalConfig, {
+            variables,
+            onexpandchange: (hide, data) => {
+                // close infix mode
+                update([
+                    ['infixPath', null],
+                    ['value', data.value],
+                    ['title', '']
+                ]);
+            }
+        }), opts)
+    );
+
+    let suffixParamItemRender = (opts) => expressionView(
+        mergeMap(mergeMap(globalConfig, {
+            variables
+        }), opts)
+    );
+
+    let expressionType = getExpressionType(value.path);
+
+    switch (expressionType) {
+        case PREDICATE:
+            return {
+                getPrefixParams: getPrefixParamser(data, {
+                    // prefix param item
+                    itemRender: prefixParamItemRender
+                }),
+
+                value,
+
+                getSuffixParams: getSuffixParamser(data, {
+                    // suffix param item
+                    itemRender: suffixParamItemRender
+                }),
+
+                getParam: getParamer(data, {
+                    // suffix param item
+                    itemRender: suffixParamItemRender
+                }),
+
+                getOptionsView,
+
+                getExpandor,
+
+                expressionType
+            };
+        case JSON_DATA:
+            return {
+                value,
+                onchange,
+                getOptionsView,
+                getExpandor,
+
+                expressionType
+            };
+        case VARIABLE:
+            return {
+                value,
+                getOptionsView,
+                getExpandor,
+
+                expressionType
+            };
+        case ABSTRACTION:
+            return {
+                value,
+                variables,
+
+                getOptionsView,
+                getExpandor,
+
+                onchange,
+                expressionType,
+                expressionBody: getAbstractionBody(),
+            };
+        default:
+            return {
+                value,
+                getOptionsView,
+                getExpandor,
+
+                expressionType
+            };
+    }
+};
+
+
+/***/ }),
+/* 84 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    dsl
+} = __webpack_require__(10);
+
+let {
+    destruct,
+
+    APPLICATION_PREFIX,
+    PREDICATE_PREFIX,
+    PREDICATE_VARIABLE_PREFIX,
+    VARIABLE_PREFIX,
+    META_DATA_PREFIX,
+    ABSTRACTION_PREFIX
+} = dsl;
+
+let {
+    JSON_DATA,
+    VARIABLE,
+    ABSTRACTION,
+    PREDICATE,
+
+    NUMBER,
+    BOOLEAN,
+    STRING,
+    NULL,
+    JSON_TYPE
+} = __webpack_require__(3);
+
+let {
+    compact, map
+} = __webpack_require__(2);
+
+let {
+    isString, isNumber, isBool, isNull, isObject
+} = __webpack_require__(0);
+
+/**
+ * lambda ui value = {
+ *     path,
+ *
+ *     expression,    // for abstraction
+ *
+ *     variables,    // for abstraction
+ *
+ *     params,    // predicate
+ *
+ *     value    // json data
+ * }
+ */
+
+let getLambdaUiValue = (lambdaJson) => {
+    let {
+        type,
+        metaData,
+
+        variableName,
+
+        abstractionArgs,
+        abstractionBody,
+
+        predicateName,
+        predicateParams
+    } = destruct(lambdaJson);
+
+    switch (type) {
+        case META_DATA_PREFIX:
+            return {
+                path: compact([JSON_DATA, getMetaType(metaData)]).join('.'),
+                value: metaData
+            };
+        case VARIABLE_PREFIX:
+            return {
+                path: [VARIABLE, variableName].join('.')
+            };
+        case ABSTRACTION_PREFIX:
+            return {
+                path: ABSTRACTION,
+                expression: getLambdaUiValue(abstractionBody),
+                variables: abstractionArgs
+            };
+        case PREDICATE_PREFIX:
+            return {
+                path: compact([PREDICATE, predicateName]).join('.'),
+                params: map(predicateParams, getLambdaUiValue)
+            };
+        case APPLICATION_PREFIX:
+            // TODO
+            break;
+        case PREDICATE_VARIABLE_PREFIX:
+            // TODO
+            break;
+    }
+};
+
+let getMetaType = (data) => {
+    if (isString(data)) return STRING;
+
+    else if (isNumber(data)) return NUMBER;
+
+    else if (isBool(data)) return BOOLEAN;
+
+    else if (isNull(data)) return NULL;
+
+    else if (isObject(data)) return JSON_TYPE;
+};
+
+module.exports = getLambdaUiValue;
+
+
+/***/ }),
+/* 85 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let formStyle = __webpack_require__(86);
+
+module.exports = `
+.lambda-ui {
+    font-size: 14px;
+}
+
+.lambda-variable fieldset{
+    display: inline-block;
+    border: 1px solid rgba(200, 200, 200, 0.4);
+    border-radius: 5px;
+    padding: 3px 4px;
+}
+
+.lambda-variable input{
+    width: 30px !important;
+    min-width: 30px !important;
+    outline: none;
+} 
+
+.lambda-params fieldset{
+    padding: 1px 4px;
+    border: 0;
+}
+
+.lambda-ui-hover:hover{
+    background-color: #f5f5f5 !important;
+}
+
+.lambda-ui .expandor-wrapper {
+    position: relative;
+    display: inline-block;
+    border-radius: 5px;
+}
+
+.lambda-ui .expression-wrapper {
+    display: inline-block;
+    padding: 8px;
+    border: 1px solid rgba(200, 200, 200, 0.4);
+    border-radius: 5px
+}
+
+` + formStyle;
+
+
+/***/ }),
+/* 86 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = `
+.lambda-ui input[type=text]{
+    border: 0;
+    border-bottom: 1px solid rgba(0,0,0,.12);
+    outline: none;
+    height: 28px;
+    min-width: 160px;
+}
+
+.lambda-ui input[type=text]:focus{
+    border: 0;
+    height: 27px;
+    border-bottom: 2px solid #3f51b5;
+}
+
+.lambda-ui input[type=password]{
+    border: 0;
+    border-bottom: 1px solid rgba(0,0,0,.12);
+    outline: none;
+    height: 28px;
+    min-width: 160px;
+}
+
+.lambda-ui input[type=password]:focus{
+    border: 0;
+    height: 27px;
+    border-bottom: 2px solid #3f51b5;
+}
+
+.lambda-ui input[type=number]{
+    border: 0;
+    border-bottom: 1px solid rgba(0,0,0,.12);
+    outline: none;
+    height: 28px;
+    min-width: 160px;
+}
+
+.lambda-ui input[type=number]:focus{
+    border: 0;
+    height: 27px;
+    border-bottom: 2px solid #3f51b5;
+}
+
+.lambda-ui .input-style {
+    border: 0;
+    display: inline-block;
+    border-bottom: 1px solid rgba(0,0,0,.12);
+    outline: none;
+    height: 28px;
+    min-width: 160px;
+}
+
+.lambda-ui label {
+    font-size: 14px;
+    margin-right: 8px;
+    color: #666666;
+}
+
+.lambda-ui fieldset {
+    border: 0;
+}
+
+.lambda-ui button {
+    min-width: 100px;
+}
+
+.lambda-ui button {
+    min-width: 40px;
+    text-align: center;
+    padding-left: 10px;
+    padding-right: 10px;
+    line-height: 20px;
+    background-color: #3b3a36;
+    color: white;
+    border: none;
+    text-decoration: none;
+}
+ 
+.lambda-ui button:hover {
+    background-color: #b3c2bf;
+    cursor: pointer;
+}
+
+.lambda-ui button:focus {
+    outline: none;
+}
+
+.lambda-ui button:active {
+    background-color: #e9ece5;
+}
+`;
+
+
+/***/ }),
+/* 87 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+const LAMBDA_STYLE = __webpack_require__(85);
+
+let {
+    n
+} = __webpack_require__(1);
+
+module.exports = ({
+    styleStr = LAMBDA_STYLE
+} = {}) => {
+    let $style = document.getElementById('lambda-style');
+    if (!$style) {
+        $style = n('style id="lambda-style" type="text/css"', styleStr);
+        document.getElementsByTagName('head')[0].appendChild($style);
+    }
+};
+
+
+/***/ }),
+/* 88 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    isFunction, funType, isObject
+} = __webpack_require__(0);
+
+/**
+ * define meta info at a function
+ *
+ * info = {
+ *    viewer,
+ *    args: [{}, {}, ..., {}]
+ * }
+ */
+
+module.exports = funType((fun, meta) => {
+    fun.meta = meta;
+    return fun;
+}, [isFunction, isObject]);
+
+
+/***/ }),
+/* 89 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    view, n
+} = __webpack_require__(1);
+
+let fold = __webpack_require__(16);
+
+let triangle = __webpack_require__(12);
+
+let TreeSelect = __webpack_require__(19);
+
+let {
+    mergeMap
+} = __webpack_require__(2);
+
+/**
+ * @param options Array
+ *  options used to select
+ * @param onExpand
+ * @param onselected
+ *
+ */
+module.exports = view(({
+    options,
+    onExpand,
+    onselected,
+    hide
+}) => {
+    return n('div', {
+        style: {
+            display: 'inline-block'
+        }
+    }, [
+        fold({
+            head: (ops) => {
+                return n('div', {
+                    style: mergeMap(
+                        ops.isHide() ? triangle({
+                            direction: 'right',
+                            top: 5,
+                            bottom: 5,
+                            left: 5,
+                            color: '#737373'
+                        }) : triangle({
+                            direction: 'left',
+                            top: 5,
+                            bottom: 5,
+                            right: 5,
+                            color: '#737373'
+                        }), {
+                            position: 'absolute',
+                            bottom: 0,
+                            marginLeft: 5,
+                            cursor: 'pointer'
+                        }
+                    ),
+
+                    onclick: () => {
+                        ops.toggle();
+                        onExpand && onExpand(ops.isHide());
+                    }
+                });
+            },
+
+            hide,
+
+            body: () => {
+                return n('div', {
+                    style: {
+                        display: 'inline-block',
+                        marginLeft: 15,
+                        position: 'absolute',
+                        bottom: 0
+                    }
+                }, TreeSelect({
+                    data: options,
+                    onselected: (v, path) => {
+                        onselected && onselected(v, path);
+                    }
+                }));
+            }
+        })
+    ]);
+});
+
+
+/***/ }),
+/* 90 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    view
+} = __webpack_require__(1);
+
+let SelectView = __webpack_require__(17);
+
+module.exports = view((data) => {
+    let {
+        content,
+        onchange
+    } = data;
+
+    return SelectView({
+        options: [
+            ['true'],
+            ['false']
+        ],
+        selected: content === true ? 'true' : 'false',
+        onchange: (v) => {
+            let ret = false;
+            if (v === 'true') {
+                ret = true;
+            }
+            data.content = ret;
+            onchange && onchange(v);
+        }
+    });
+});
+
+
+/***/ }),
+/* 91 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let boolInput = __webpack_require__(90);
+
+let numberInput = __webpack_require__(94);
+
+let textInput = __webpack_require__(95);
+
+let jsonCodeInput = __webpack_require__(92);
+
+let nullInput = __webpack_require__(93);
+
+let {
+    NUMBER, BOOLEAN, STRING, JSON_TYPE, NULL
+} = __webpack_require__(3);
+
+let inputViewMap = {
+    [NUMBER]: numberInput,
+    [STRING]: textInput,
+    [BOOLEAN]: boolInput,
+    [JSON_TYPE]: jsonCodeInput,
+    [NULL]: nullInput
+};
+
+module.exports = (data, type) => {
+    let v = inputViewMap[type];
+
+    return v && v(data);
+};
+
+
+/***/ }),
+/* 92 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    view, n
+} = __webpack_require__(1);
+
+module.exports = view((data) => {
+    let {
+        content,
+        onchange
+    } = data;
+
+    return n('div', {
+        style: {
+            marginLeft: 15,
+            width: 600,
+            height: 500
+        }
+    }, [
+        n('textarea', {
+            value: JSON.stringify(content, null, 4) || '{}',
+            oninput: (e) => {
+                let v = e.target.value;
+                try {
+                    let jsonObject = JSON.parse(v);
+                    data.content = jsonObject;
+                    onchange && onchange(jsonObject);
+                } catch (err) {
+                    onchange(err);
+                }
+            }
+        })
+    ]);
+});
+
+
+/***/ }),
+/* 93 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    n
+} = __webpack_require__(1);
+
+module.exports = () => {
+    return n('span', 'null');
+};
+
+
+/***/ }),
+/* 94 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    view, n
+} = __webpack_require__(1);
+
+module.exports = view((data) => {
+    let {
+        content,
+        placeholder,
+        onchange
+    } = data;
+
+    return n(`input type="number" placeholder="${placeholder||''}"`, {
+        style: {
+            marginTop: -10
+        },
+        value: content,
+        oninput: (e) => {
+            let num = Number(e.target.value);
+            data.content = num;
+            onchange && onchange(num);
+        }
+    });
+});
+
+
+/***/ }),
+/* 95 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    view, n
+} = __webpack_require__(1);
+
+module.exports = view((data) => {
+    let {
+        type,
+        placeholder,
+        content,
+        onchange
+    } = data;
+
+    return n(`input type="${type || 'text'}" placeholder="${placeholder || ''}"`, {
+        style: {
+            marginTop: -10
+        },
+
+        value: content,
+
+        oninput: (e) => {
+            data.content = e.target.value;
+            onchange && onchange(e.target.value);
+        }
+    });
+});
+
+
+/***/ }),
+/* 96 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    view, n
+} = __webpack_require__(1);
+
+let {
+    mergeMap
+} = __webpack_require__(2);
+
+let {
+    isFunction
+} = __webpack_require__(0);
+
+let TreeSelect = __webpack_require__(19);
+
+let triangle = __webpack_require__(12);
+
+let {
+    PREDICATE, VARIABLE
+} = __webpack_require__(3);
+
+const DEFAULT_TITLE = 'please select';
+
+module.exports = view(({
+    path,
+    data,
+    showSelectTree,
+    onselected,
+    title,
+    guideLine,
+    nameMap
+}, {
+    update
+}) => {
+    return n('label', {
+        style: {
+            color: '#9b9b9b',
+            fontSize: 12,
+            position: 'relative',
+            display: 'inline-block'
+        }
+    }, [
+        path && title && n('div', {
+            style: {
+                fontSize: 14
+            }
+        }, title),
+
+        n('div', {
+            style: {
+                paddingRight: 8,
+                cursor: 'pointer',
+                backgroundColor: showSelectTree ? 'rgba(200, 200, 200, .12)' : 'none'
+            },
+
+            'class': 'lambda-ui-hover',
+
+            onclick: () => {
+                update('showSelectTree', !showSelectTree);
+            }
+        }, path ? (guideLine === false ? null : (!guideLine ? renderGuideLine(path) : guideLine)) : n('div class="input-style"', {
+            style: {
+                color: '#9b9b9b',
+                overflow: 'auto'
+            }
+        }, [
+            n('span', {
+                style: {
+                    fontSize: 12
+                }
+            }, title || DEFAULT_TITLE),
+
+            n('div', {
+                style: mergeMap(triangle({
+                    direction: 'down',
+                    top: 5,
+                    left: 5,
+                    right: 5,
+                    color: '#737373'
+                }), {
+                    display: 'inline-block',
+                    'float': 'right',
+                    position: 'relative',
+                    top: 5
+                })
+            })
+        ])),
+
+        n('div', {
+            style: {
+                position: 'absolute',
+                backgroundColor: 'white',
+                zIndex: 10000,
+                fontSize: 14
+            }
+        }, [
+            showSelectTree && data && TreeSelect({
+                data: isFunction(data) ? data() : data,
+                onselected: (v, p) => {
+                    onselected && onselected(v, p);
+                    update([
+                        ['path', p],
+                        ['showSelectTree', false]
+                    ]);
+                },
+                nameMap
+            })
+        ])
+    ]);
+});
+
+/**
+ * @param path string
+ */
+let renderGuideLine = (path) => {
+    let parts = path.split('.');
+    let last = parts.pop();
+    let type = parts[0];
+
+    return n('span', [
+        n('span', {
+            style: {
+                fontWeight: (type === PREDICATE || type === VARIABLE) ? 'bold' : 'inherit',
+                fontSize: 12,
+                color: '#b4881d',
+                padding: '0 5px'
+            }
+        }, last),
+
+        (type === PREDICATE || type === VARIABLE) && parts.length && n('span', {
+            style: {
+                paddingLeft: 10
+            }
+        }, `(${parts.join(' > ')})`)
+    ]);
+};
+
+
+/***/ }),
+/* 97 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    n, view
+} = __webpack_require__(1);
+
+let InputList = __webpack_require__(14);
+
+let {
+    reduce, map
+} = __webpack_require__(2);
+
+// used to define variables
+// TODO variables detect
+module.exports = view((data) => {
+    let {
+        title,
+        variables = [], onchange = v => v
+    } = data;
+
+    return n('div', {
+        'class': 'lambda-variable'
+    }, [
+        InputList({
+            value: map(variables, (variable) => {
+                return variable || '';
+            }),
+
+            title: n('span', {
+                style: {
+                    color: '#9b9b9b',
+                    fontSize: 14
+                }
+            }, title),
+
+            onchange: (v) => {
+                // TODO check variable definition
+                onchange(reduce(v, (prev, item) => {
+                    item && prev.push(item.trim());
+                    return prev;
+                }, []));
+
+                data.variables = v;
+            }
+        })
+    ]);
+});
+
+
+/***/ }),
+/* 98 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    reduce
+} = __webpack_require__(99);
+let {
+    funType, isObject, or, isString, isFalsy
+} = __webpack_require__(0);
+
+let defineProperty = (obj, key, opts) => {
+    if (Object.defineProperty) {
+        Object.defineProperty(obj, key, opts);
+    } else {
+        obj[key] = opts.value;
+    }
+    return obj;
+};
+
+let hasOwnProperty = (obj, key) => {
+    if (obj.hasOwnProperty) {
+        return obj.hasOwnProperty(key);
+    }
+    for (var name in obj) {
+        if (name === key) return true;
+    }
+    return false;
+};
+
+let toArray = (v = []) => Array.prototype.slice.call(v);
+
+/**
+ * a.b.c
+ */
+let get = funType((sandbox, name = '') => {
+    name = name.trim();
+    let parts = !name ? [] : name.split('.');
+    return reduce(parts, getValue, sandbox, invertLogic);
+}, [
+    isObject,
+    or(isString, isFalsy)
+]);
+
+let getValue = (obj, key) => obj[key];
+
+let invertLogic = v => !v;
+
+let set = (sandbox, name = '', value) => {
+    name = name.trim();
+    let parts = !name ? [] : name.split('.');
+    let parent = sandbox;
+    if (!isObject(parent)) return;
+    if (!parts.length) return;
+    for (let i = 0; i < parts.length - 1; i++) {
+        let part = parts[i];
+        let next = parent[part];
+        if (!isObject(next)) {
+            next = {};
+            parent[part] = next;
+        }
+        parent = next;
+    }
+
+    parent[parts[parts.length - 1]] = value;
+    return sandbox;
+};
+
+/**
+ * provide property:
+ *
+ * 1. read props freely
+ *
+ * 2. change props by provide token
+ */
+
+let authProp = (token) => {
+    let set = (obj, key, value) => {
+        let temp = null;
+
+        if (!hasOwnProperty(obj, key)) {
+            defineProperty(obj, key, {
+                enumerable: false,
+                configurable: false,
+                set: (value) => {
+                    if (isObject(value)) {
+                        if (value.token === token) {
+                            // save
+                            temp = value.value;
+                        }
+                    }
+                },
+                get: () => {
+                    return temp;
+                }
+            });
+        }
+
+        setProp(obj, key, value);
+    };
+
+    let setProp = (obj, key, value) => {
+        obj[key] = {
+            token,
+            value
+        };
+    };
+
+    return {
+        set
+    };
+};
+
+let evalCode = (code) => {
+    if (typeof code !== 'string') return code;
+    return eval(`(function(){
+    try {
+        ${code}
+    } catch(err) {
+        console.log('Error happened, when eval code.');
+        throw err;
+    }
+})()`);
+};
+
+let delay = (time) => new Promise((resolve) => {
+    setTimeout(resolve, time);
+});
+
+let runSequence = (list, params = [], context, stopV) => {
+    if (!list.length) {
+        return Promise.resolve();
+    }
+    let fun = list[0];
+    try {
+        let v = fun && fun.apply(context, params);
+
+        if (stopV && v === stopV) {
+            return Promise.resolve(stopV);
+        }
+        return Promise.resolve(v).then(() => {
+            return runSequence(list.slice(1), params, context, stopV);
+        });
+    } catch (err) {
+        return Promise.reject(err);
+    }
+};
+
+module.exports = {
+    defineProperty,
+    hasOwnProperty,
+    toArray,
+    get,
+    set,
+    authProp,
+    evalCode,
+    delay,
+    runSequence
+};
+
+
+/***/ }),
+/* 99 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    isObject, funType, or, isString, isFalsy, likeArray
+} = __webpack_require__(0);
+
+let iterate = __webpack_require__(23);
+
+let {
+    map, reduce, find, findIndex, forEach, filter, any, exist, compact
+} = __webpack_require__(100);
+
+let contain = (list, item, fopts) => findIndex(list, item, fopts) !== -1;
+
+let difference = (list1, list2, fopts) => {
+    return reduce(list1, (prev, item) => {
+        if (!contain(list2, item, fopts) &&
+            !contain(prev, item, fopts)) {
+            prev.push(item);
+        }
+        return prev;
+    }, []);
+};
+
+let union = (list1, list2, fopts) => deRepeat(list2, fopts, deRepeat(list1, fopts));
+
+let mergeMap = (map1 = {}, map2 = {}) => reduce(map2, setValueKey, reduce(map1, setValueKey, {}));
+
+let setValueKey = (obj, value, key) => {
+    obj[key] = value;
+    return obj;
+};
+
+let interset = (list1, list2, fopts) => {
+    return reduce(list1, (prev, cur) => {
+        if (contain(list2, cur, fopts)) {
+            prev.push(cur);
+        }
+        return prev;
+    }, []);
+};
+
+let deRepeat = (list, fopts, init = []) => {
+    return reduce(list, (prev, cur) => {
+        if (!contain(prev, cur, fopts)) {
+            prev.push(cur);
+        }
+        return prev;
+    }, init);
+};
+
+/**
+ * a.b.c
+ */
+let get = funType((sandbox, name = '') => {
+    name = name.trim();
+    let parts = !name ? [] : name.split('.');
+    return reduce(parts, getValue, sandbox, invertLogic);
+}, [
+    isObject,
+    or(isString, isFalsy)
+]);
+
+let getValue = (obj, key) => obj[key];
+
+let invertLogic = v => !v;
+
+let delay = (time) => new Promise((resolve) => {
+    setTimeout(resolve, time);
+});
+
+let flat = (list) => {
+    if (likeArray(list) && !isString(list)) {
+        return reduce(list, (prev, item) => {
+            prev = prev.concat(flat(item));
+            return prev;
+        }, []);
+    } else {
+        return [list];
+    }
+};
+
+module.exports = {
+    flat,
+    contain,
+    difference,
+    union,
+    interset,
+    map,
+    reduce,
+    iterate,
+    find,
+    findIndex,
+    deRepeat,
+    forEach,
+    filter,
+    any,
+    exist,
+    get,
+    delay,
+    mergeMap,
+    compact
+};
+
+
+/***/ }),
+/* 100 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let iterate = __webpack_require__(23);
+
+let defauls = {
+    eq: (v1, v2) => v1 === v2
+};
+
+let setDefault = (opts, defauls) => {
+    for (let name in defauls) {
+        opts[name] = opts[name] || defauls[name];
+    }
+};
+
+let forEach = (list, handler) => iterate(list, {
+    limit: (rets) => {
+        if (rets === true) return true;
+        return false;
+    },
+    transfer: handler,
+    output: (prev, cur) => cur,
+    def: false
+});
+
+let map = (list, handler, limit) => iterate(list, {
+    transfer: handler,
+    def: [],
+    limit
+});
+
+let reduce = (list, handler, def, limit) => iterate(list, {
+    output: handler,
+    def,
+    limit
+});
+
+let filter = (list, handler, limit) => reduce(list, (prev, cur, index, list) => {
+    handler && handler(cur, index, list) && prev.push(cur);
+    return prev;
+}, [], limit);
+
+let find = (list, item, fopts) => {
+    let index = findIndex(list, item, fopts);
+    if (index === -1) return undefined;
+    return list[index];
+};
+
+let any = (list, handler) => reduce(list, (prev, cur, index, list) => {
+    let curLogic = handler && handler(cur, index, list);
+    return prev && originLogic(curLogic);
+}, true, falsyIt);
+
+let exist = (list, handler) => reduce(list, (prev, cur, index, list) => {
+    let curLogic = handler && handler(cur, index, list);
+    return prev || originLogic(curLogic);
+}, false, originLogic);
+
+let findIndex = (list, item, fopts = {}) => {
+    setDefault(fopts, defauls);
+
+    let {
+        eq
+    } = fopts;
+    let predicate = (v) => eq(item, v);
+    let ret = iterate(list, {
+        transfer: indexTransfer,
+        limit: onlyOne,
+        predicate,
+        def: []
+    });
+    if (!ret.length) return -1;
+    return ret[0];
+};
+
+let compact = (list) => reduce(list, (prev, cur) => {
+    if (cur) prev.push(cur);
+    return prev;
+}, []);
+
+let indexTransfer = (item, index) => index;
+
+let onlyOne = (rets, item, name, domain, count) => count >= 1;
+
+let falsyIt = v => !v;
+
+let originLogic = v => !!v;
+
+module.exports = {
+    map,
+    forEach,
+    reduce,
+    find,
+    findIndex,
+    filter,
+    any,
+    exist,
+    compact
+};
+
+
+/***/ }),
+/* 101 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    map, reduce
+} = __webpack_require__(2);
+
+let {
+    funType, isObject, isFunction
+} = __webpack_require__(0);
+
+let {
+    hasOwnProperty, get
+} = __webpack_require__(98);
+
+let {
+    APPLICATION_PREFIX,
+    PREDICATE_PREFIX,
+    PREDICATE_VARIABLE_PREFIX,
+    VARIABLE_PREFIX,
+    META_DATA_PREFIX,
+    ABSTRACTION_PREFIX,
+
+    destruct
+} = __webpack_require__(24);
+
+/**
+ * used to interpret lambda json
+ *
+ * TODO
+ *
+ * basic operation:
+ *  - α conversion (renaming) חx.e ←→ חy.[y/x]e
+ *  - β reduction (application) (חx.e₁)e₂ → [e₂/x]e₁
+ *  - Ŋ reduction     חx.ex → e
+ */
+
+/**
+ * d: meta data
+ * v: variable
+ * l: abstraction
+ * p: predicate
+ * a: application
+ * f: predicate as variable
+ *
+ * TODO
+ *
+ * 1. name capture
+ * 2. reduce
+ *
+ * @param predicateSet Object
+ *  a map of predicates
+ */
+
+module.exports = (predicateSet) => {
+    return (data) => {
+        // TODO check data format
+        let translate = funType((json, ctx) => {
+            let translateWithCtx = (data) => translate(data, ctx);
+
+            let error = (msg) => {
+                throw new Error(msg + ' . Context json is ' + JSON.stringify(json));
+            };
+
+            let {
+                type,
+                metaData,
+
+                variableName,
+
+                predicateName,
+                predicateParams,
+
+                abstractionArgs,
+                abstractionBody,
+
+                applicationFun,
+                applicationParams
+            } = destruct(json);
+
+            switch (type) {
+                case META_DATA_PREFIX: // meta data
+                    return metaData;
+
+                case VARIABLE_PREFIX: // variable
+                    var context = ctx;
+                    while (context) {
+                        if (hasOwnProperty(context.curVars, variableName)) {
+                            return context.curVars[variableName];
+                        }
+                        context = context.parentCtx;
+                    }
+
+                    return error(`undefined variable ${variableName}`);
+
+                case ABSTRACTION_PREFIX: // abstraction
+                    return (...args) => {
+                        // update variable map
+                        return translate(abstractionBody, {
+                            curVars: reduce(abstractionArgs, (prev, name, index) => {
+                                prev[name] = args[index];
+                                return prev;
+                            }, {}),
+                            parentCtx: ctx
+                        });
+                    };
+
+                case PREDICATE_PREFIX: // predicate
+                    var predicate = get(predicateSet, predicateName);
+                    if (!isFunction(predicate)) {
+                        return error(`missing predicate ${predicateName}`);
+                    }
+                    return predicate(...map(predicateParams, translateWithCtx));
+
+                case APPLICATION_PREFIX: // application
+                    var abstraction = translateWithCtx(applicationFun);
+                    if (!isFunction(abstraction)) {
+                        return error(`expected function, but got ${fun} from ${applicationFun}.`);
+                    }
+                    return abstraction(...map(applicationParams, translateWithCtx));
+
+                case PREDICATE_VARIABLE_PREFIX: // predicate as a variable
+                    var fun = get(predicateSet, predicateName);
+                    if (!isFunction(fun)) {
+                        return error(`missing predicate ${predicateName}`);
+                    }
+                    return fun;
+            }
+        }, [
+            isObject, isObject
+        ]);
+
+        return translate(data, {
+            curVars: {}
+        });
+    };
+};
+
+
+/***/ }),
 /* 102 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -4733,7 +9294,7 @@ let getStyle = (styleName) => (node) => {
     if (node.nodeType !== 1) return null;
     let ret = window.getComputedStyle(node).getPropertyValue(styleName);
     if (styleName === 'background-color' || styleName === 'color') {
-        ret = onecolor(ret).hex();
+        ret = onecolor(ret).cssa();
     }
     return ret;
 };
@@ -4924,12 +9485,12 @@ module.exports = (node, {
     }
 
     let content = extractor(node);
-    if (content === undefined) return false; // using undefined as the fail situation
+    if (content === undefined || content === null) return false; // using undefined as the fail situation
 
     if (extractorType === 'background-color' || extractorType === 'color') {
         let color = onecolor(pattern);
         if (!color) return false;
-        pattern = color.hex();
+        pattern = color.cssa();
     }
 
     let patternWay = patternMap[patternType];
@@ -7277,6 +11838,7 @@ module.exports = reduce(['protocol', 'hostname', 'query', 'pathname', 'path', 'h
 
 
 let urlPatterns = __webpack_require__(148);
+let colorSimilarityPattern = __webpack_require__(152);
 
 module.exports = {
     contentPatternMap: {
@@ -7287,11 +11849,166 @@ module.exports = {
     },
 
     stylePatternMap: {
-        'background-color': ['equal'],
+        'background-color': ['equal'].concat(Object.keys(colorSimilarityPattern)),
         'font-size': ['equal'],
-        'color': ['equal']
+        'color': ['equal'].concat(Object.keys(colorSimilarityPattern))
     }
 };
+
+
+/***/ }),
+/* 150 */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(151);
+
+
+/***/ }),
+/* 151 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/**
+ * Calculate the similarity of colors.
+ *
+ * There are many color space definitions.
+ *
+ * The color input format: [r, g, b]
+ */
+
+let euclideanDistanceSquare = (list1, list2) => {
+    let sum = 0;
+    for (let i = 0; i < list1.length; i++) {
+        let offset = list1[i] - list2[i];
+        sum += offset * offset;
+    }
+
+    return sum;
+};
+
+/**
+ *
+ * ## test
+ * [
+ *      [[[0,0,0]], [0,0,0]]
+ * ]
+ */
+let toYUV = ([r, g, b]) => {
+    return [
+        0.299 * r + 0.587 * g + 0.114 * b,
+
+        (-0.14713) * r + (-0.28886) * g + 0.436 * b,
+
+        0.615 * r + (-0.51499) * g + (-0.10001) * b
+    ];
+};
+
+const RGB_MAX_DISTANCE_SQUARE = euclideanDistanceSquare([255, 255, 255], [0, 0, 0]); // white to black
+
+const YUV_MAX_DISTANCE_SQUARE = euclideanDistanceSquare(toYUV([255, 255, 255]), toYUV([0, 0, 0]));
+
+/**
+ * RGB distance in the euclidean space is not very "similar to avarage human perception"
+ * http://stackoverflow.com/questions/5392061/algorithm-to-check-similarity-of-colors
+ *
+ * ## test
+ * [
+ *      [[[255,255,255],[0,0,0]], 0],
+ *      [[[10, 20, 30], [47, 60, 20]], 0.8745710933982787],
+ *      [[[10, 20, 30], [147, 160, 20]], 0.5559267216899502],
+ *      [[[10, 20, 30], [255, 255, 255]], 0.07787528945273836],
+ *      [[[100, 200, 130], [0, 0, 0]], 0.4143849206639969],
+ *      [[[13, 25, 58], [13, 25, 58]], 1]
+ * ]
+ */
+let rgbSimilarity = (rgb1, rgb2) => {
+    return 1 - Math.sqrt(euclideanDistanceSquare(rgb1, rgb2) / RGB_MAX_DISTANCE_SQUARE);
+};
+
+/**
+ * YUV color space: https://en.wikipedia.org/wiki/YUV
+ *
+ * luma (Y') + two chrominance (UV) components
+ *
+ * ## test
+ * [
+ *      [[[255,255,255],[0,0,0]], 0],
+ *      [[[10,10,10],[10,10,10]], 1],
+ *      [[[30, 40, 69], [10,10,10]], 0.8641405520635254],
+ *      [[[130, 140, 69], [10,10,10]], 0.5195287815428749]
+ * ]
+ */
+let YUVSimilarity = (rgb1, rgb2) => {
+    return 1 - Math.sqrt(YUVDistance(rgb1, rgb2) / YUV_MAX_DISTANCE_SQUARE);
+};
+
+/**
+ * ## test
+ * [
+ *      [[[0,0,0], [0,0,0]], 0],
+ *      [[[255,255,255], [0,0,0]], 65025.0000065025],
+ *      [[[255,255,255], [0,255,0]], 33762.903244425]
+ * ]
+ */
+let YUVDistance = (rgb1, rgb2) => {
+    return euclideanDistanceSquare(toYUV(rgb1), toYUV(rgb2));
+};
+
+// TODO CIE L*a*b color space
+
+module.exports = {
+    rgbSimilarity,
+    YUVSimilarity
+};
+
+
+/***/ }),
+/* 152 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    YUVSimilarity
+} = __webpack_require__(150);
+
+let color = __webpack_require__(27);
+
+let matchSimilarity = (similarity) => (pattern, content) => {
+    let patternColor = color(pattern);
+    let contentColor = color(content);
+
+    let alphaOffset = patternColor.alpha() - contentColor.alpha();
+    let alphaSimilarity = 1 - (Math.sqrt(alphaOffset * alphaOffset) / 1);
+
+    let realSimilarity = alphaSimilarity * YUVSimilarity([
+        patternColor.red() * 255,
+        patternColor.green() * 255,
+        patternColor.blue() * 255
+    ], [
+        contentColor.red() * 255,
+        contentColor.green() * 255,
+        contentColor.blue() * 255
+    ]);
+
+    return realSimilarity >= similarity;
+};
+
+let buildSimilarityPatterns = (step) => {
+    let count = Math.floor(100 / step);
+    let map = {};
+    for (let i = 1; i < count; i++) {
+        let name = `color_similarity_ge_${i * step}`;
+        map[name] = matchSimilarity(i * step / 100);
+    }
+
+    return map;
+};
+
+module.exports = buildSimilarityPatterns(10);
 
 
 /***/ })

@@ -1,6 +1,8 @@
 'use strict';
 
-let urlPatterns = require('./urlPattern');
+let urlPattern = require('./urlPattern');
+
+let colorSimilarityPattern = require('./colorSimilarityPattern');
 
 let {
     mergeMap
@@ -23,9 +25,12 @@ let trimEqual = (pattern = '', content = '') => {
     return pattern.trim() === content.trim();
 };
 
-module.exports = mergeMap(urlPatterns, {
-    equal,
-    contain,
-    regExp,
-    trimEqual
-});
+module.exports = mergeMap(
+    colorSimilarityPattern,
+    mergeMap(urlPattern, {
+        equal,
+        contain,
+        regExp,
+        trimEqual
+    })
+);

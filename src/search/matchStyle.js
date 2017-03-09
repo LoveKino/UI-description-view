@@ -17,12 +17,12 @@ module.exports = (node, {
     }
 
     let content = extractor(node);
-    if (content === undefined) return false; // using undefined as the fail situation
+    if (content === undefined || content === null) return false; // using undefined as the fail situation
 
     if (extractorType === 'background-color' || extractorType === 'color') {
         let color = onecolor(pattern);
         if (!color) return false;
-        pattern = color.hex();
+        pattern = color.cssa();
     }
 
     let patternWay = patternMap[patternType];
