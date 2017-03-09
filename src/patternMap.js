@@ -2,6 +2,7 @@
 
 let urlPatterns = require('./restraint/pattern/urlPattern');
 let colorSimilarityPattern = require('./restraint/pattern/colorSimilarityPattern');
+let aroundPercentPattern = require('./restraint/pattern/aroundPercentPattern');
 
 module.exports = {
     contentPatternMap: {
@@ -13,7 +14,7 @@ module.exports = {
 
     stylePatternMap: {
         'background-color': ['equal'].concat(Object.keys(colorSimilarityPattern)),
-        'font-size': ['equal'],
+        'font-size': ['equal'].concat(Object.keys(aroundPercentPattern)),
         'color': ['equal'].concat(Object.keys(colorSimilarityPattern))
     }
 };

@@ -6,6 +6,10 @@ let patternMap = require('../restraint/pattern');
 
 let onecolor = require('onecolor');
 
+let {
+    pxToInt
+} = require('../util');
+
 module.exports = (node, {
     extractorType,
     patternType,
@@ -23,6 +27,8 @@ module.exports = (node, {
         let color = onecolor(pattern);
         if (!color) return false;
         pattern = color.cssa();
+    } else if (extractorType === 'font-size') {
+        pattern = pxToInt(pattern);
     }
 
     let patternWay = patternMap[patternType];

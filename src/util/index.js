@@ -47,5 +47,6 @@ let pxToInt = (px) => {
 
 module.exports = {
     getBoundRect,
-    ImageInnerNode
+    ImageInnerNode,
+    pxToInt
 };

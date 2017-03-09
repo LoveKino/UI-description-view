@@ -1,6 +1,6 @@
 {
   "name": "ui-description-view",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "ui description view",
   "main": "index.js",
   "directories": {
@@ -30,6 +30,7 @@
     "webpack": "^2.2.1"
   },
   "dependencies": {
+    "basetype": "^0.1.4",
     "bolzano": "^0.1.1",
     "color-similarity": "0.0.1",
     "kabanery": "^0.1.6",

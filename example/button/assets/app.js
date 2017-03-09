@@ -2954,8 +2954,10 @@ let urlPattern = __webpack_require__(148);
 
 let colorSimilarityPattern = __webpack_require__(152);
 
+let aroundPercentPattern = __webpack_require__(153);
+
 let {
-    mergeMap
+    mergeMap, reduce
 } = __webpack_require__(2);
 
 let equal = (v1, v2) => v1 === v2;
@@ -2975,15 +2977,14 @@ let trimEqual = (pattern = '', content = '') => {
     return pattern.trim() === content.trim();
 };
 
-module.exports = mergeMap(
-    colorSimilarityPattern,
-    mergeMap(urlPattern, {
+module.exports = reduce([
+    colorSimilarityPattern, urlPattern, aroundPercentPattern, {
         equal,
         contain,
         regExp,
         trimEqual
-    })
-);
+    }
+], (prev, cur) => mergeMap(prev, cur), {});
 
 
 /***/ }),
@@ -9290,11 +9291,17 @@ module.exports = (node) => {
 
 let onecolor = __webpack_require__(27);
 
+let {
+    pxToInt
+} = __webpack_require__(139);
+
 let getStyle = (styleName) => (node) => {
     if (node.nodeType !== 1) return null;
     let ret = window.getComputedStyle(node).getPropertyValue(styleName);
     if (styleName === 'background-color' || styleName === 'color') {
         ret = onecolor(ret).cssa();
+    } else if (styleName === 'font-size') {
+        ret = pxToInt(ret);
     }
     return ret;
 };
@@ -9474,6 +9481,10 @@ let patternMap = __webpack_require__(30);
 
 let onecolor = __webpack_require__(27);
 
+let {
+    pxToInt
+} = __webpack_require__(139);
+
 module.exports = (node, {
     extractorType,
     patternType,
@@ -9491,6 +9502,8 @@ module.exports = (node, {
         let color = onecolor(pattern);
         if (!color) return false;
         pattern = color.cssa();
+    } else if (extractorType === 'font-size') {
+        pattern = pxToInt(pattern);
     }
 
     let patternWay = patternMap[patternType];
@@ -10234,7 +10247,8 @@ let pxToInt = (px) => {
 
 module.exports = {
     getBoundRect,
-    ImageInnerNode
+    ImageInnerNode,
+    pxToInt
 };
 
 
@@ -11839,6 +11853,7 @@ module.exports = reduce(['protocol', 'hostname', 'query', 'pathname', 'path', 'h
 
 let urlPatterns = __webpack_require__(148);
 let colorSimilarityPattern = __webpack_require__(152);
+let aroundPercentPattern = __webpack_require__(153);
 
 module.exports = {
     contentPatternMap: {
@@ -11850,7 +11865,7 @@ module.exports = {
 
     stylePatternMap: {
         'background-color': ['equal'].concat(Object.keys(colorSimilarityPattern)),
-        'font-size': ['equal'],
+        'font-size': ['equal'].concat(Object.keys(aroundPercentPattern)),
         'color': ['equal'].concat(Object.keys(colorSimilarityPattern))
     }
 };
@@ -12009,6 +12024,47 @@ let buildSimilarityPatterns = (step) => {
 };
 
 module.exports = buildSimilarityPatterns(10);
+
+
+/***/ }),
+/* 153 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    isNumber
+} = __webpack_require__(0);
+
+let around = (percent) => (pattern, content) => {
+    if (!isNumber(pattern) || !isNumber(content)) {
+        return false;
+    }
+
+    if (pattern === 0) {
+        if (content === 0) return true;
+        return false;
+    }
+
+    let distance = Math.abs(pattern - content);
+    let pre = distance / Math.abs(pattern);
+
+    return pre <= percent;
+};
+
+let buildAroundPatterns = (step) => {
+    let count = Math.floor(100 / step);
+    let map = {};
+    for (let i = 1; i < count; i++) {
+        let name = `around_${i * step}Percent`;
+        map[name] = around(i * step / 100);
+    }
+
+    return map;
+};
+
+module.exports = buildAroundPatterns(10);
 
 
 /***/ })
