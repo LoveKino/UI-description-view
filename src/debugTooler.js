@@ -7,12 +7,12 @@ let {
     getBoundRect
 } = require('./util');
 
-module.exports = (gridScope, topNode, grid = [0, 0]) => {
+module.exports = (parent, gridScope, topNode, grid = [0, 0]) => {
     let hintGrid = gridHelperView({
         gridScope,
         grid
     });
-    document.body.appendChild(hintGrid);
+    parent.appendChild(hintGrid);
 
     return (v) => {
         hintGrid.ctx.update('grid', v.position[0]);
@@ -23,11 +23,11 @@ module.exports = (gridScope, topNode, grid = [0, 0]) => {
         // light up chosen nodes
         nodes.map((node) => {
             let bv = blinkView(getBoundRect(node));
-            document.body.appendChild(bv);
+            parent.appendChild(bv);
 
             // bink a while in the node's face
             setTimeout(() => {
-                document.body.removeChild(bv);
+                parent.removeChild(bv);
             }, 2000);
         });
     };

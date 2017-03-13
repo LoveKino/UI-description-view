@@ -8,7 +8,7 @@ let gridScope = wndsize();
 gridScope.x = 400;
 gridScope.width = gridScope.width - 400;
 
-let debugTool = debugTooler(gridScope, document.querySelectorAll('#searchItem *'));
+let debugTool = debugTooler(document.body, gridScope, document.querySelectorAll('#searchItem *'));
 
 document.body.appendChild(udView({
     onchange: (v) => {
