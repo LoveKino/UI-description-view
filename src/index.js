@@ -10,6 +10,8 @@ let udView = require('./udView');
 
 let search = require('./search');
 
+let searchIn = require('./search/searchIn');
+
 let gridHelperView = require('./view/gridHelperView');
 
 let blinkView = require('./view/blinkView');
@@ -27,5 +29,6 @@ module.exports = {
     blinkView,
     getBoundRect,
     ImageInnerNode,
-    debugTooler
+    debugTooler,
+    searchIn
 };

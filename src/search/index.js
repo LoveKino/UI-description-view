@@ -1,20 +1,6 @@
 'use strict';
 
-let {
-    filter, any
-} = require('bolzano');
-
-let InsideBox = require('./insideBox');
-
-let matchContent = require('./matchContent');
-
-let matchStyle = require('./matchStyle');
-
-let expandNodes = require('./expandNodes');
-
-let {
-    getBoundRect
-} = require('../util');
+let searchIn = require('./searchIn');
 
 /**
  * search target nodes accroding to the description of UI
@@ -26,62 +12,12 @@ module.exports = (nodes, {
     position,
     content,
     style
-}, {
-    gridScope
-} = {}) => {
-    nodes = expandNodes(nodes);
-    //
-    gridScope = gridScope || wndsize();
+}, options) => {
+    let doSearch = searchIn(nodes);
 
-    let insideBox = InsideBox(gridScope, position);
-
-    // step1: filter by position
-    nodes = filter(nodes, (node) => {
-        let rect = getBoundRect(node);
-        if (rect.width === 0 || rect.height === 0) return false; // not showing
-        return insideBox(rect);
-    });
-
-    // step2: filter by content
-    nodes = filter(nodes, (node) => {
-        return any(content, (item) => {
-            return matchContent(node, item);
-        });
-    });
-
-    // step3: filter by style
-    nodes = filter(nodes, (node) => {
-        return any(style, (item) => {
-            return matchStyle(node, item);
-        });
-    });
-
-    return nodes;
+    return doSearch({
+        position,
+        content,
+        style
+    }, options);
 };
-
-function wndsize() {
-    var w = 0;
-    var h = 0;
-    //IE
-    if (!window.innerWidth) {
-        if (!(document.documentElement.clientWidth === 0)) {
-            //strict mode
-            w = document.documentElement.clientWidth;
-            h = document.documentElement.clientHeight;
-        } else {
-            //quirks mode
-            w = document.body.clientWidth;
-            h = document.body.clientHeight;
-        }
-    } else {
-        //w3c
-        w = window.innerWidth;
-        h = window.innerHeight;
-    }
-    return {
-        width: w,
-        height: h,
-        x: 0,
-        y: 0
-    };
-}
