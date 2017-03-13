@@ -13,8 +13,11 @@ let {
 module.exports = (node, {
     extractorType,
     patternType,
-    pattern
+    pattern,
+    active
 }) => {
+    if (active === false) return true;
+
     let extractor = styleExtractorMap[extractorType];
     if (!extractor) {
         return false;

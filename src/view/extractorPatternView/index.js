@@ -59,10 +59,18 @@ module.exports = ({
         data.value = data.value || {
             extractorType: defExtractorType,
             patternType: extractorPatternsMap[defExtractorType][0],
-            pattern: ''
+            pattern: '',
+            active: true
         };
 
         return n('div style="display: inline-block;padding-left: 10px;"', [
+            n(`input type="checkbox" ${data.value.active? 'checked="checked"': ''}`, {
+                onclick: () => {
+                    update('value.active', !data.value.active);
+                    data.onchange && data.onchange(data.value);
+                }
+            }),
+
             // select extractor
             Select({
                 selected: data.value.extractorType,

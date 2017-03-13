@@ -7,8 +7,11 @@ let patternMap = require('../restraint/pattern');
 module.exports = (node, {
     extractorType,
     patternType,
-    pattern
+    pattern,
+    active
 }) => {
+    if(active === false) return true;
+
     let extractor = contentExtractorMap[extractorType];
     if (!extractor) {
         return false;

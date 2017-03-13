@@ -1,41 +1,21 @@
 'use strict';
 
 let {
-    udView, search, gridHelperView, blinkView, getBoundRect
+    udView, debugTooler
 } = require('../../src');
 
 let gridScope = wndsize();
 gridScope.x = 400;
 gridScope.width = gridScope.width - 400;
 
-let hintGrid = gridHelperView({
-    gridScope,
-    grid: [3, 3]
-});
-document.body.appendChild(hintGrid);
+let debugTool = debugTooler(gridScope, document.querySelectorAll('#searchItem *'));
 
 document.body.appendChild(udView({
     onchange: (v) => {
         try {
-            hintGrid.ctx.update('grid', v.position[0]);
-
-            let nodes = search(document.querySelectorAll('#searchItem *'), v, {
-                gridScope
-            });
-
-            console.log(nodes);
-
-            nodes.map((node) => {
-                let bv = blinkView(getBoundRect(node));
-                document.body.appendChild(bv);
-
-                // bink a while in the node's face
-                setTimeout(() => {
-                    document.body.removeChild(bv);
-                }, 2000);
-            });
+            debugTool(v);
         } catch (err) {
-            console.log(err);
+            console.log(err); // eslint-disable-line
         }
     }
 }));

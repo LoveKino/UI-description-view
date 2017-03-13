@@ -35,23 +35,28 @@ module.exports = (nodes, {
 
     let insideBox = InsideBox(gridScope, position);
 
-    return filter(
-        filter(filter(nodes, (node) => {
-            let rect = getBoundRect(node);
-            if (rect.width === 0 || rect.height === 0) return false; // not showing
-            return insideBox(rect);
-        }), (node) => {
-            return any(content, (item) => {
-                return matchContent(node, item);
-            });
-        }),
+    // step1: filter by position
+    nodes = filter(nodes, (node) => {
+        let rect = getBoundRect(node);
+        if (rect.width === 0 || rect.height === 0) return false; // not showing
+        return insideBox(rect);
+    });
 
-        (node) => {
-            return any(style, (item) => {
-                return matchStyle(node, item);
-            });
-        }
-    );
+    // step2: filter by content
+    nodes = filter(nodes, (node) => {
+        return any(content, (item) => {
+            return matchContent(node, item);
+        });
+    });
+
+    // step3: filter by style
+    nodes = filter(nodes, (node) => {
+        return any(style, (item) => {
+            return matchStyle(node, item);
+        });
+    });
+
+    return nodes;
 };
 
 function wndsize() {

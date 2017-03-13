@@ -74,14 +74,16 @@ module.exports = view((data) => {
     let defaultContentItem = {
         extractorType: defContentKey,
         patternType: contentExtractorPatternsMap[defContentKey][0],
-        pattern: ''
+        pattern: '',
+        active: true
     };
 
     let defStyleContentKey = Object.keys(styleExtractorPatternsMap)[0];
     let defaultStyleItem = {
         extractorType: defStyleContentKey,
         patternType: styleExtractorPatternsMap[defStyleContentKey][0],
-        pattern: ''
+        pattern: '',
+        active: false
     };
 
     let ContentView = ExtractorPatternViewer({

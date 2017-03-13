@@ -14,6 +14,8 @@ let gridHelperView = require('./view/gridHelperView');
 
 let blinkView = require('./view/blinkView');
 
+let debugTooler = require('./debugTooler');
+
 let {
     getBoundRect, ImageInnerNode
 } = require('./util');
@@ -24,5 +26,6 @@ module.exports = {
     gridHelperView,
     blinkView,
     getBoundRect,
-    ImageInnerNode
+    ImageInnerNode,
+    debugTooler
 };
