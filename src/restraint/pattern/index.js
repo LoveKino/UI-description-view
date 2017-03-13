@@ -24,6 +24,8 @@ let regExp = (pattern, content) => {
 };
 
 let trimEqual = (pattern = '', content = '') => {
+    if (pattern === null && content !== null) return false;
+    if (pattern !== null && content === null) return false;
     return pattern.trim() === content.trim();
 };
 
