@@ -79,7 +79,8 @@ module.exports = ({
                     data.value = {
                         extractorType: v,
                         patternType: extractorPatternsMap[v][0],
-                        pattern: ''
+                        pattern: '',
+                        active: true
                     };
                     data.onchange && data.onchange(data.value);
                     update();
