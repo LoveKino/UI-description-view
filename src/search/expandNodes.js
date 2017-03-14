@@ -1,7 +1,7 @@
 'use strict';
 
 let {
-    union, reduce, filter
+    reduce, filter
 } = require('bolzano');
 
 let {
@@ -11,19 +11,22 @@ let {
 let expandNodes = (nodes) => {
     nodes = reduce(nodes, (prev, node) => {
         // append text node
-        prev = union(prev, filter(node.childNodes, (childNode) => {
+        prev = prev.concat(filter(node.childNodes, (childNode) => {
             return childNode.nodeType === 3;
         }));
-        return prev;
-    }, nodes);
 
-    return reduce(nodes, (prev, node) => {
+        return prev;
+    }, Array.prototype.slice.call(nodes));
+
+    let ret = reduce(nodes, (prev, node) => {
         if (node.nodeName.toLowerCase() === 'img') {
             prev.push(new ImageInnerNode(node));
         }
 
         return prev;
     }, nodes);
+
+    return ret;
 };
 
 module.exports = expandNodes;
