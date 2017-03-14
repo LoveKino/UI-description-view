@@ -14,7 +14,8 @@ module.exports = view(({
             top,
             width,
             height,
-            backgroundColor: 'rgba(200, 100, 100, 0.6)'
+            backgroundColor: 'rgba(200, 100, 100, 0.6)',
+            zIndex: 100000
         }
     });
 });
