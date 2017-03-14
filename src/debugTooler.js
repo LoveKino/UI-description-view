@@ -30,5 +30,7 @@ module.exports = (parent, gridScope, topNode, grid = [0, 0]) => {
                 parent.removeChild(bv);
             }, 2000);
         });
+
+        return nodes;
     };
 };
