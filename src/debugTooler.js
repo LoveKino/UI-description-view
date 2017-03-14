@@ -7,15 +7,14 @@ let {
     getBoundRect
 } = require('./util');
 
-module.exports = (parent, gridScope, topNode, grid = [0, 0]) => {
+module.exports = (parent, gridScope, topNode) => {
     let hintGrid = gridHelperView({
-        gridScope,
-        grid
+        gridScope
     });
     parent.appendChild(hintGrid);
 
     return (v) => {
-        hintGrid.ctx.update('grid', v.position[0]);
+        hintGrid.ctx.update('position', v.position);
         let nodes = search(topNode, v, {
             gridScope
         });

@@ -5,17 +5,21 @@ let {
 } = require('kabanery');
 
 module.exports = view(({
-    grid,
-    gridScope
+    position = [], gridScope
 }) => {
+    let [grid, area] = position;
+    grid = grid || [0, 0];
     let [horizontalGrid, verticalGrid] = grid;
 
     let unitWidth = gridScope.width / horizontalGrid,
         unitHeight = gridScope.height / verticalGrid;
 
     let grids = [];
+
     for (let i = 0; i < horizontalGrid; i++) {
         for (let j = 0; j < verticalGrid; j++) {
+            let backgroundColor = isItemChosen(i, j, area[0], area[1]) ? 'rgba(100,200,100,0.5)' : 'rgba(200, 200, 200, 0.1)';
+
             grids.push(n('div', {
                 style: {
                     width: unitWidth,
@@ -28,7 +32,7 @@ module.exports = view(({
                     left: unitWidth * i,
                     top: unitHeight * j,
                     boxSizing: 'border-box',
-                    backgroundColor: 'rgba(200, 200, 200, 0.1)'
+                    backgroundColor
                 }
             }));
         }
@@ -45,3 +49,9 @@ module.exports = view(({
         }
     }, [grids]);
 });
+
+let isItemChosen = (i, j, lt, rb) => {
+    if (!lt || !rb) return false;
+    let [x1, y1] = lt, [x2, y2] = rb;
+    return (x1 <= i && i <= x2) && (y1 <= j && j <= y2);
+};

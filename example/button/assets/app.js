@@ -3331,7 +3331,8 @@ module.exports = view(({
             top,
             width,
             height,
-            backgroundColor: 'rgba(200, 100, 100, 0.6)'
+            backgroundColor: 'rgba(200, 100, 100, 0.6)',
+            zIndex: 100000
         }
     });
 });
@@ -3349,17 +3350,21 @@ let {
 } = __webpack_require__(1);
 
 module.exports = view(({
-    grid,
-    gridScope
+    position = [], gridScope
 }) => {
+    let [grid, area] = position;
+    grid = grid || [0, 0];
     let [horizontalGrid, verticalGrid] = grid;
 
     let unitWidth = gridScope.width / horizontalGrid,
         unitHeight = gridScope.height / verticalGrid;
 
     let grids = [];
+
     for (let i = 0; i < horizontalGrid; i++) {
         for (let j = 0; j < verticalGrid; j++) {
+            let backgroundColor = isItemChosen(i, j, area[0], area[1]) ? 'rgba(100,200,100,0.5)' : 'rgba(200, 200, 200, 0.1)';
+
             grids.push(n('div', {
                 style: {
                     width: unitWidth,
@@ -3372,7 +3377,7 @@ module.exports = view(({
                     left: unitWidth * i,
                     top: unitHeight * j,
                     boxSizing: 'border-box',
-                    backgroundColor: 'rgba(200, 200, 200, 0.1)'
+                    backgroundColor
                 }
             }));
         }
@@ -3389,6 +3394,12 @@ module.exports = view(({
         }
     }, [grids]);
 });
+
+let isItemChosen = (i, j, lt, rb) => {
+    if (!lt || !rb) return false;
+    let [x1, y1] = lt, [x2, y2] = rb;
+    return (x1 <= i && i <= x2) && (y1 <= j && j <= y2);
+};
 
 
 /***/ }),
@@ -11244,15 +11255,14 @@ let {
     getBoundRect
 } = __webpack_require__(7);
 
-module.exports = (parent, gridScope, topNode, grid = [0, 0]) => {
+module.exports = (parent, gridScope, topNode) => {
     let hintGrid = gridHelperView({
-        gridScope,
-        grid
+        gridScope
     });
     parent.appendChild(hintGrid);
 
     return (v) => {
-        hintGrid.ctx.update('grid', v.position[0]);
+        hintGrid.ctx.update('position', v.position);
         let nodes = search(topNode, v, {
             gridScope
         });
@@ -11267,6 +11277,8 @@ module.exports = (parent, gridScope, topNode, grid = [0, 0]) => {
                 parent.removeChild(bv);
             }, 2000);
         });
+
+        return nodes;
     };
 };
 
@@ -11463,7 +11475,7 @@ module.exports = {
 
 
 let {
-    union, reduce, filter
+    reduce, filter
 } = __webpack_require__(2);
 
 let {
@@ -11473,19 +11485,22 @@ let {
 let expandNodes = (nodes) => {
     nodes = reduce(nodes, (prev, node) => {
         // append text node
-        prev = union(prev, filter(node.childNodes, (childNode) => {
+        prev = prev.concat(filter(node.childNodes, (childNode) => {
             return childNode.nodeType === 3;
         }));
-        return prev;
-    }, nodes);
 
-    return reduce(nodes, (prev, node) => {
+        return prev;
+    }, Array.prototype.slice.call(nodes));
+
+    let ret = reduce(nodes, (prev, node) => {
         if (node.nodeName.toLowerCase() === 'img') {
             prev.push(new ImageInnerNode(node));
         }
 
         return prev;
     }, nodes);
+
+    return ret;
 };
 
 module.exports = expandNodes;
