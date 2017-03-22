@@ -3221,20 +3221,14 @@ module.exports = (nodes, {
 
 
 let {
-    filter, any
+    filter
 } = __webpack_require__(2);
 
-let InsideBox = __webpack_require__(143);
-
-let matchContent = __webpack_require__(144);
-
-let matchStyle = __webpack_require__(145);
+let {
+    match
+} = __webpack_require__(153);
 
 let expandNodes = __webpack_require__(142);
-
-let {
-    getBoundRect
-} = __webpack_require__(7);
 
 /**
  * search target nodes accroding to the description of UI
@@ -3246,68 +3240,12 @@ module.exports = (nodes) => {
     // expand nodes first
     nodes = expandNodes(nodes);
 
-    return ({
-        position,
-        content,
-        style
-    }, {
-        gridScope
-    } = {}) => {
-
-        gridScope = gridScope || wndsize();
-        let insideBox = InsideBox(gridScope, position);
-
-        // step1: filter by position
-        let rets = filter(nodes, (node) => {
-            let rect = getBoundRect(node);
-            if (rect.width === 0 || rect.height === 0) return false; // not showing
-            return insideBox(rect);
-        });
-
-        // step2: filter by content
-        rets = filter(rets, (node) => {
-            return any(content, (item) => {
-                return matchContent(node, item);
-            });
-        });
-
-        // step3: filter by style
-        rets = filter(rets, (node) => {
-            return any(style, (item) => {
-                return matchStyle(node, item);
-            });
-        });
+    return (rule, options) => {
+        let rets = filter(nodes, (node) => match(node, rule, options));
 
         return rets;
     };
 };
-
-function wndsize() {
-    var w = 0;
-    var h = 0;
-    //IE
-    if (!window.innerWidth) {
-        if (!(document.documentElement.clientWidth === 0)) {
-            //strict mode
-            w = document.documentElement.clientWidth;
-            h = document.documentElement.clientHeight;
-        } else {
-            //quirks mode
-            w = document.body.clientWidth;
-            h = document.body.clientHeight;
-        }
-    } else {
-        //w3c
-        w = window.innerWidth;
-        h = window.innerHeight;
-    }
-    return {
-        width: w,
-        height: h,
-        x: 0,
-        y: 0
-    };
-}
 
 
 /***/ }),
@@ -3428,6 +3366,11 @@ let blinkView = __webpack_require__(37);
 let debugTooler = __webpack_require__(134);
 
 let {
+    match,
+    collectMatchInfos
+} = __webpack_require__(153);
+
+let {
     getBoundRect, ImageInnerNode
 } = __webpack_require__(7);
 
@@ -3439,7 +3382,10 @@ module.exports = {
     getBoundRect,
     ImageInnerNode,
     debugTooler,
-    searchIn
+    searchIn,
+
+    match,
+    collectMatchInfos
 };
 
 
@@ -11255,15 +11201,15 @@ let {
     getBoundRect
 } = __webpack_require__(7);
 
-module.exports = (parent, gridScope, topNode) => {
+let lightupSearch = (parent, gridScope, topNode) => {
     let hintGrid = gridHelperView({
         gridScope
     });
     parent.appendChild(hintGrid);
 
-    return (v) => {
-        hintGrid.ctx.update('position', v.position);
-        let nodes = search(topNode, v, {
+    return (rule) => {
+        hintGrid.ctx.update('position', rule.position);
+        let nodes = search(topNode, rule, {
             gridScope
         });
 
@@ -11280,6 +11226,10 @@ module.exports = (parent, gridScope, topNode) => {
 
         return nodes;
     };
+};
+
+module.exports = {
+    lightupSearch
 };
 
 
@@ -11507,125 +11457,9 @@ module.exports = expandNodes;
 
 
 /***/ }),
-/* 143 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = (gridScope, position) => {
-    let [grid, area] = position;
-    let [leftGrid, topGrid] = area[0];
-    let [rightGrid, bottomGrid] = area[1];
-    let leftTopCoord = getGridCoord(gridScope, grid, [leftGrid, topGrid]);
-    let rightBottomCoord = getGridCoord(gridScope, grid, [rightGrid + 1, bottomGrid + 1]);
-
-    return ({
-        left, top, right, bottom
-    }) => {
-        return insideBox([left, top], leftTopCoord, rightBottomCoord) && insideBox([right, bottom], leftTopCoord, rightBottomCoord);
-    };
-};
-
-let insideBox = ([x, y], [l, t], [r, b]) => {
-    return x >= l && y >= t && x <= r && y <= b;
-};
-
-let getGridCoord = (scope, [m, n], [t, r]) => {
-    return [
-        (scope.width / m) * t + scope.x, (scope.height / n) * r + scope.y
-    ];
-};
-
-
-/***/ }),
-/* 144 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-let contentExtractorMap = __webpack_require__(138);
-
-let patternMap = __webpack_require__(33);
-
-module.exports = (node, {
-    extractorType,
-    patternType,
-    pattern,
-    active
-}) => {
-    if(active === false) return true;
-
-    let extractor = contentExtractorMap[extractorType];
-    if (!extractor) {
-        return false;
-    }
-
-    // extract content from node
-    let content = extractor(node);
-    if(content === undefined) return false;
-
-    let patternWay = patternMap[patternType];
-    if (!patternWay) {
-        return false;
-    }
-
-    return patternWay(pattern, content);
-};
-
-
-/***/ }),
-/* 145 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-let styleExtractorMap = __webpack_require__(141);
-
-let patternMap = __webpack_require__(33);
-
-let onecolor = __webpack_require__(12);
-
-let {
-    pxToInt
-} = __webpack_require__(7);
-
-module.exports = (node, {
-    extractorType,
-    patternType,
-    pattern,
-    active
-}) => {
-    if (active === false) return true;
-
-    let extractor = styleExtractorMap[extractorType];
-    if (!extractor) {
-        return false;
-    }
-
-    let content = extractor(node);
-    if (content === undefined || content === null) return false; // using undefined as the fail situation
-
-    if (extractorType === 'background-color' || extractorType === 'color') {
-        let color = onecolor(pattern);
-        if (!color) return false;
-        pattern = color.cssa();
-    } else if (extractorType === 'font-size') {
-        pattern = pxToInt(pattern);
-    }
-
-    let patternWay = patternMap[patternType];
-    if (!patternWay) {
-        return false;
-    }
-
-    return patternWay(pattern, content);
-};
-
-
-/***/ }),
+/* 143 */,
+/* 144 */,
+/* 145 */,
 /* 146 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -12130,19 +11964,25 @@ module.exports = ({
 
 
 let {
-    udView, debugTooler
+    udView, debugTooler, collectMatchInfos
 } = __webpack_require__(39);
+
+let {
+    lightupSearch
+} = debugTooler;
 
 let gridScope = wndsize();
 gridScope.x = 400;
 gridScope.width = gridScope.width - 400;
 
-let debugTool = debugTooler(document.body, gridScope, document.querySelectorAll('#searchItem *'));
+let showLight = lightupSearch(document.body, gridScope, document.querySelectorAll('#searchItem *'));
 
 document.body.appendChild(udView({
     onchange: (v) => {
         try {
-            debugTool(v);
+            showLight(v);
+
+            console.log(collectMatchInfos(document.querySelector('img'), v, gridScope));
         } catch (err) {
             console.log(err); // eslint-disable-line
         }
@@ -12175,6 +12015,276 @@ function wndsize() {
         y: 0
     };
 }
+
+
+/***/ }),
+/* 150 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let contentExtractorMap = __webpack_require__(138);
+
+let patternMap = __webpack_require__(33);
+
+let match = (content, rule) => {
+    if (rule.active === false) return true;
+
+    // extract content from node
+    if (content === undefined) return false;
+
+    let pattern = getPattern(rule);
+
+    let patternWay = getPatternWay(rule);
+
+    return patternWay(pattern, content);
+};
+
+let getContent = (node, {
+    extractorType
+}) => {
+    let extractor = contentExtractorMap[extractorType];
+    if (!extractor) {
+        throw new Error(`missing content extractor ${extractorType}`);
+    }
+
+    // extract content from node
+    return extractor(node);
+};
+
+let getPatternWay = ({
+    patternType
+}) => {
+    let patternWay = patternMap[patternType];
+    if (!patternWay) {
+        throw new Error(`missing pattern ${patternType} in content matching`);
+    }
+
+    return patternWay;
+};
+
+let getPattern = (rule) => rule.pattern;
+
+module.exports = {
+    match,
+    getContent
+};
+
+
+/***/ }),
+/* 151 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let styleExtractorMap = __webpack_require__(141);
+
+let patternMap = __webpack_require__(33);
+
+let onecolor = __webpack_require__(12);
+
+let {
+    pxToInt
+} = __webpack_require__(7);
+
+let match = (content, rule) => {
+    if (rule.active === false) return true;
+
+    if (content === undefined || content === null) return false; // using undefined as the fail situation
+
+    let pattern = getPattern(rule);
+
+    let patternWay = getPatternWay(rule);
+
+    return patternWay(pattern, content);
+};
+
+let getPatternWay = ({
+    patternType
+}) => {
+    let patternWay = patternMap[patternType];
+    if (!patternWay) {
+        throw new Error(`missing pattern ${patternType} in style matching.`);
+    }
+
+    return patternWay;
+};
+
+let getContent = (node, {
+    extractorType
+}) => {
+    let extractor = styleExtractorMap[extractorType];
+    if (!extractor) {
+        throw new Error(`missing style extractor ${extractorType}.`);
+    }
+
+    return extractor(node);
+};
+
+let getPattern = (extractorType, pattern) => {
+    if (extractorType === 'background-color' || extractorType === 'color') {
+        let color = onecolor(pattern);
+        if (!color) {
+            throw new Error(`can not convert pattern to color. pattern is ${pattern}.`);
+        }
+        pattern = color.cssa();
+    } else if (extractorType === 'font-size') {
+        pattern = pxToInt(pattern);
+    }
+
+    return pattern;
+};
+
+module.exports = {
+    match,
+    getContent
+};
+
+
+/***/ }),
+/* 152 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = ({
+    left, top, right, bottom
+}, position, gridScope) => {
+    gridScope = gridScope || wndsize();
+
+    let [grid, area] = position;
+    let [leftGrid, topGrid] = area[0];
+    let [rightGrid, bottomGrid] = area[1];
+    let leftTopCoord = getGridCoord(gridScope, grid, [leftGrid, topGrid]);
+    let rightBottomCoord = getGridCoord(gridScope, grid, [rightGrid + 1, bottomGrid + 1]);
+
+    return insideBox([left, top], leftTopCoord, rightBottomCoord) && insideBox([right, bottom], leftTopCoord, rightBottomCoord);
+};
+
+let insideBox = ([x, y], [l, t], [r, b]) => {
+    return x >= l && y >= t && x <= r && y <= b;
+};
+
+let getGridCoord = (scope, [m, n], [t, r]) => {
+    return [
+        (scope.width / m) * t + scope.x, (scope.height / n) * r + scope.y
+    ];
+};
+
+function wndsize() {
+    var w = 0;
+    var h = 0;
+    //IE
+    if (!window.innerWidth) {
+        if (!(document.documentElement.clientWidth === 0)) {
+            //strict mode
+            w = document.documentElement.clientWidth;
+            h = document.documentElement.clientHeight;
+        } else {
+            //quirks mode
+            w = document.body.clientWidth;
+            h = document.body.clientHeight;
+        }
+    } else {
+        //w3c
+        w = window.innerWidth;
+        h = window.innerHeight;
+    }
+    return {
+        width: w,
+        height: h,
+        x: 0,
+        y: 0
+    };
+}
+
+
+/***/ }),
+/* 153 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let insideBox = __webpack_require__(152);
+
+let matchContent = __webpack_require__(150);
+
+let matchStyle = __webpack_require__(151);
+
+let {
+    any, map
+} = __webpack_require__(2);
+
+let {
+    getBoundRect
+} = __webpack_require__(7);
+
+let match = (node, {
+    position,
+    content,
+    style
+}, {
+    gridScope
+} = {}) => {
+    let rect = getBoundRect(node);
+
+    return insideBox(rect, position, gridScope) && any(content, (item) => {
+        return matchContent.match(matchContent.getContent(node, item), item);
+    }) && any(style, (item) => {
+        return matchStyle.match(matchStyle.getContent(node, item), item);
+    });
+};
+
+let collectMatchInfos = (node, {
+    position,
+    content = [], style = []
+}, {
+    gridScope
+} = {}) => {
+    let rect = getBoundRect(node);
+
+    return {
+        position: [insideBox(rect, position, gridScope), {
+            feature: rect,
+            rule: position,
+            gridScope
+        }],
+        content: map(content, (item) => {
+            let cnt = matchContent.getContent(node, item);
+            return [
+                matchContent.match(cnt, item),
+
+                {
+                    feature: cnt,
+                    rule: item
+                }
+            ];
+        }),
+        style: map(style, (item) => {
+            let cnt = matchStyle.getContent(node, item);
+            return [
+                matchStyle.match(cnt, item),
+
+                {
+                    feature: cnt,
+                    rule: item
+                }
+            ];
+        })
+    };
+};
+
+module.exports = {
+    insideBox,
+    matchContent,
+    matchStyle,
+    match,
+    collectMatchInfos
+};
 
 
 /***/ })

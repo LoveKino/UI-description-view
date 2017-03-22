@@ -1,19 +1,25 @@
 'use strict';
 
 let {
-    udView, debugTooler
+    udView, debugTooler, collectMatchInfos
 } = require('../../src');
+
+let {
+    lightupSearch
+} = debugTooler;
 
 let gridScope = wndsize();
 gridScope.x = 400;
 gridScope.width = gridScope.width - 400;
 
-let debugTool = debugTooler(document.body, gridScope, document.querySelectorAll('#searchItem *'));
+let showLight = lightupSearch(document.body, gridScope, document.querySelectorAll('#searchItem *'));
 
 document.body.appendChild(udView({
     onchange: (v) => {
         try {
-            debugTool(v);
+            showLight(v);
+
+            console.log(collectMatchInfos(document.querySelector('img'), v, gridScope));
         } catch (err) {
             console.log(err); // eslint-disable-line
         }

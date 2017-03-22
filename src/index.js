@@ -19,6 +19,11 @@ let blinkView = require('./view/blinkView');
 let debugTooler = require('./debugTooler');
 
 let {
+    match,
+    collectMatchInfos
+} = require('./match');
+
+let {
     getBoundRect, ImageInnerNode
 } = require('./util');
 
@@ -30,5 +35,8 @@ module.exports = {
     getBoundRect,
     ImageInnerNode,
     debugTooler,
-    searchIn
+    searchIn,
+
+    match,
+    collectMatchInfos
 };
