@@ -16,6 +16,7 @@ let match = (content, rule) => {
     if (content === undefined || content === null) return false; // using undefined as the fail situation
 
     let pattern = getPattern(rule);
+    if(pattern === undefined) return false;
 
     let patternWay = getPatternWay(rule);
 
@@ -44,11 +45,13 @@ let getContent = (node, {
     return extractor(node);
 };
 
-let getPattern = (extractorType, pattern) => {
+let getPattern = ({
+    extractorType, pattern
+}) => {
     if (extractorType === 'background-color' || extractorType === 'color') {
         let color = onecolor(pattern);
         if (!color) {
-            throw new Error(`can not convert pattern to color. pattern is ${pattern}.`);
+            return undefined;
         }
         pattern = color.cssa();
     } else if (extractorType === 'font-size') {

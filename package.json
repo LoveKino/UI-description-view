@@ -1,6 +1,6 @@
 {
   "name": "ui-description-view",
-  "version": "0.0.24",
+  "version": "0.0.25",
   "description": "ui description view",
   "main": "index.js",
   "directories": {

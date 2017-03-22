@@ -83,7 +83,7 @@ module.exports = view((data) => {
         extractorType: defStyleContentKey,
         patternType: styleExtractorPatternsMap[defStyleContentKey][0],
         pattern: '',
-        active: false
+        active: true
     };
 
     let ContentView = ExtractorPatternViewer({
