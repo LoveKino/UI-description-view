@@ -21,7 +21,12 @@ let match = (node, {
 }, {
     gridScope
 } = {}) => {
-    let rect = getBoundRect(node);
+    let {
+        bottom, height, left, right, top, width
+    } = getBoundRect(node);
+    let rect = {
+        bottom, height, left, right, top, width
+    };
 
     return insideBox(rect, position, gridScope) && any(content, (item) => {
         return matchContent.match(matchContent.getContent(node, item), item);
