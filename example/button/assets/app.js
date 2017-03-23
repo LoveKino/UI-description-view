@@ -3053,31 +3053,25 @@ let collectMatchInfos = (node, {
     let rect = getBoundRect(node);
 
     return {
-        position: [insideBox(rect, position, gridScope), {
-            feature: rect,
-            rule: position,
+        position: [
+            insideBox(rect, position, gridScope),
+            rect,
             gridScope
-        }],
+        ],
+
         content: map(content, (item) => {
             let cnt = matchContent.getContent(node, item);
             return [
                 matchContent.match(cnt, item),
-
-                {
-                    feature: cnt,
-                    rule: item
-                }
+                cnt
             ];
         }),
+
         style: map(style, (item) => {
             let cnt = matchStyle.getContent(node, item);
             return [
                 matchStyle.match(cnt, item),
-
-                {
-                    feature: cnt,
-                    rule: item
-                }
+                cnt
             ];
         })
     };
