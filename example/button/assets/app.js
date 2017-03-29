@@ -893,7 +893,7 @@ let getBoundRect = (node) => {
     if (node.nodeType === 3) {
         let range = document.createRange();
         range.selectNode(node);
-        let rect = range.getBoundingClientRect();
+        let rect = range.getClientRects()[0] || range.getBoundingClientRect();
         range.detach();
         return rect;
     } else {
