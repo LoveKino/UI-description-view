@@ -889,13 +889,55 @@ module.exports = function HSL(color) {
 "use strict";
 
 
-let onecolor = __webpack_require__(12);
-
 let getBoundRect = (node) => {
     if (node.nodeType === 3) {
         let range = document.createRange();
         range.selectNode(node);
-        let rect = range.getClientRects()[0] || range.getBoundingClientRect();
+        let clientRects = range.getClientRects();
+        clientRects = Array.prototype.slice.call(clientRects);
+
+        if (!clientRects.length) return {
+            left: 0,
+            top: 0,
+            width: 0,
+            height: 0,
+            right: 0,
+            bottom: 0
+        };
+
+        let {
+            lefts, rights, tops, bottoms, widths, heights
+        } = clientRects.reduce((prev, {
+            left, right, bottom, top, width, height
+        }) => {
+            prev.lefts.push(left);
+            prev.rights.push(right);
+            prev.bottoms.push(bottom);
+            prev.tops.push(top);
+            prev.widths.push(width);
+            prev.heights.push(height);
+
+            return prev;
+        }, {
+            lefts: [],
+            rights: [],
+            tops: [],
+            bottoms: [],
+            widths: [],
+            heights: []
+        });
+
+        let rect = {
+            left: Math.min(...lefts),
+            top: Math.min(...tops),
+            width: Math.max(...widths),
+            height: clientRects.reduce((prev, {
+                height
+            }) => prev + height, 0),
+            right: Math.max(...rights),
+            bottom: Math.max(...bottoms)
+        };
+        rect.leftOffset = clientRects[0].left - rect.left;
         range.detach();
         return rect;
     } else {
@@ -905,17 +947,17 @@ let getBoundRect = (node) => {
 
 let getFontSize = (node) => {
     if (node.nodeType === 3) {
-        return pxToInt(window.getComputedStyle(node.parentNode).getPropertyValue('font-size'));
+        return window.getComputedStyle(node.parentNode).getPropertyValue('font-size');
     } else if (node.nodeType === 1) {
-        return pxToInt(window.getComputedStyle(node).getPropertyValue('font-size'));
+        return window.getComputedStyle(node).getPropertyValue('font-size');
     }
 };
 
 let getColor = (node) => {
     if (node.nodeType === 3) {
-        return onecolor(window.getComputedStyle(node.parentNode).getPropertyValue('color')).cssa();
+        return window.getComputedStyle(node.parentNode).getPropertyValue('color');
     } else if (node.nodeType === 1) {
-        return onecolor(window.getComputedStyle(node).getPropertyValue('color')).cssa();
+        return window.getComputedStyle(node).getPropertyValue('color');
     }
 };
 
@@ -3051,11 +3093,16 @@ let match = (node, {
     gridScope
 } = {}) => {
     let {
-        bottom, height, left, right, top, width
+        bottom, height, left, right, top, width, leftOffset
     } = getBoundRect(node);
     let rect = {
-        bottom, height, left, right, top, width
+        bottom, height, left, right, top, width, leftOffset
     };
+
+    if(node.nodeType === 3 && node.textContent.indexOf('text') !== -1) {
+        console.log(node, rect, position, gridScope);
+        console.log(insideBox(rect, position, gridScope));
+    }
 
     return insideBox(rect, position, gridScope) && any(content, (item) => {
         return matchContent.match(matchContent.getContent(node, item), item);
@@ -3070,7 +3117,12 @@ let collectMatchInfos = (node, {
 }, {
     gridScope
 } = {}) => {
-    let rect = getBoundRect(node);
+    let {
+        bottom, height, left, right, top, width, leftOffset
+    } = getBoundRect(node);
+    let rect = {
+        bottom, height, left, right, top, width, leftOffset
+    };
 
     return {
         position: [
@@ -3475,7 +3527,7 @@ let {
 } = __webpack_require__(31);
 
 let {
-    getBoundRect, ImageInnerNode
+    getBoundRect, ImageInnerNode, getFontSize, getColor
 } = __webpack_require__(7);
 
 module.exports = {
@@ -3483,8 +3535,12 @@ module.exports = {
     search,
     gridHelperView,
     blinkView,
+
     getBoundRect,
+    getFontSize,
+    getColor,
     ImageInnerNode,
+
     debugTooler,
     searchIn,
 
@@ -11689,15 +11745,15 @@ module.exports = (node) => {
 let onecolor = __webpack_require__(12);
 
 let {
-    getFontSize, getColor
+    getFontSize, getColor, pxToInt
 } = __webpack_require__(7);
 
 let getStyle = (styleName) => (node) => {
     if ((node.nodeType === 1 || node.nodeType === 3) && styleName === 'font-size') {
-        return getFontSize(node);
+        return pxToInt(getFontSize(node));
     }
     if ((node.nodeType === 1 || node.nodeType === 3) && styleName === 'color') {
-        return getColor(node);
+        return color(getColor(node)).cssa();
     }
 
     if (node.nodeType !== 1) return null;

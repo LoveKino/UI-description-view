@@ -4,7 +4,51 @@ let getBoundRect = (node) => {
     if (node.nodeType === 3) {
         let range = document.createRange();
         range.selectNode(node);
-        let rect = range.getClientRects()[0] || range.getBoundingClientRect();
+        let clientRects = range.getClientRects();
+        clientRects = Array.prototype.slice.call(clientRects);
+
+        if (!clientRects.length) return {
+            left: 0,
+            top: 0,
+            width: 0,
+            height: 0,
+            right: 0,
+            bottom: 0
+        };
+
+        let {
+            lefts, rights, tops, bottoms, widths, heights
+        } = clientRects.reduce((prev, {
+            left, right, bottom, top, width, height
+        }) => {
+            prev.lefts.push(left);
+            prev.rights.push(right);
+            prev.bottoms.push(bottom);
+            prev.tops.push(top);
+            prev.widths.push(width);
+            prev.heights.push(height);
+
+            return prev;
+        }, {
+            lefts: [],
+            rights: [],
+            tops: [],
+            bottoms: [],
+            widths: [],
+            heights: []
+        });
+
+        let rect = {
+            left: Math.min(...lefts),
+            top: Math.min(...tops),
+            width: Math.max(...widths),
+            height: clientRects.reduce((prev, {
+                height
+            }) => prev + height, 0),
+            right: Math.max(...rights),
+            bottom: Math.max(...bottoms)
+        };
+        rect.leftOffset = clientRects[0].left - rect.left;
         range.detach();
         return rect;
     } else {

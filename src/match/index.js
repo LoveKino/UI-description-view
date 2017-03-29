@@ -22,11 +22,16 @@ let match = (node, {
     gridScope
 } = {}) => {
     let {
-        bottom, height, left, right, top, width
+        bottom, height, left, right, top, width, leftOffset
     } = getBoundRect(node);
     let rect = {
-        bottom, height, left, right, top, width
+        bottom, height, left, right, top, width, leftOffset
     };
+
+    if(node.nodeType === 3 && node.textContent.indexOf('text') !== -1) {
+        console.log(node, rect, position, gridScope);
+        console.log(insideBox(rect, position, gridScope));
+    }
 
     return insideBox(rect, position, gridScope) && any(content, (item) => {
         return matchContent.match(matchContent.getContent(node, item), item);
@@ -41,7 +46,12 @@ let collectMatchInfos = (node, {
 }, {
     gridScope
 } = {}) => {
-    let rect = getBoundRect(node);
+    let {
+        bottom, height, left, right, top, width, leftOffset
+    } = getBoundRect(node);
+    let rect = {
+        bottom, height, left, right, top, width, leftOffset
+    };
 
     return {
         position: [
