@@ -1,7 +1,5 @@
 'use strict';
 
-let onecolor = require('onecolor');
-
 let getBoundRect = (node) => {
     if (node.nodeType === 3) {
         let range = document.createRange();
@@ -16,17 +14,17 @@ let getBoundRect = (node) => {
 
 let getFontSize = (node) => {
     if (node.nodeType === 3) {
-        return pxToInt(window.getComputedStyle(node.parentNode).getPropertyValue('font-size'));
+        return window.getComputedStyle(node.parentNode).getPropertyValue('font-size');
     } else if (node.nodeType === 1) {
-        return pxToInt(window.getComputedStyle(node).getPropertyValue('font-size'));
+        return window.getComputedStyle(node).getPropertyValue('font-size');
     }
 };
 
 let getColor = (node) => {
     if (node.nodeType === 3) {
-        return onecolor(window.getComputedStyle(node.parentNode).getPropertyValue('color')).cssa();
+        return window.getComputedStyle(node.parentNode).getPropertyValue('color');
     } else if (node.nodeType === 1) {
-        return onecolor(window.getComputedStyle(node).getPropertyValue('color')).cssa();
+        return window.getComputedStyle(node).getPropertyValue('color');
     }
 };
 

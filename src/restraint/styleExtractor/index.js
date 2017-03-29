@@ -3,15 +3,15 @@
 let onecolor = require('onecolor');
 
 let {
-    getFontSize, getColor
+    getFontSize, getColor, pxToInt
 } = require('../../util');
 
 let getStyle = (styleName) => (node) => {
     if ((node.nodeType === 1 || node.nodeType === 3) && styleName === 'font-size') {
-        return getFontSize(node);
+        return pxToInt(getFontSize(node));
     }
     if ((node.nodeType === 1 || node.nodeType === 3) && styleName === 'color') {
-        return getColor(node);
+        return color(getColor(node)).cssa();
     }
 
     if (node.nodeType !== 1) return null;

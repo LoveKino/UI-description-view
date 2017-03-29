@@ -24,7 +24,7 @@ let {
 } = require('./match');
 
 let {
-    getBoundRect, ImageInnerNode
+    getBoundRect, ImageInnerNode, getFontSize, getColor
 } = require('./util');
 
 module.exports = {
@@ -32,8 +32,12 @@ module.exports = {
     search,
     gridHelperView,
     blinkView,
+
     getBoundRect,
+    getFontSize,
+    getColor,
     ImageInnerNode,
+
     debugTooler,
     searchIn,
 
