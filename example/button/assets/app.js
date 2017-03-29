@@ -889,6 +889,8 @@ module.exports = function HSL(color) {
 "use strict";
 
 
+let onecolor = __webpack_require__(12);
+
 let getBoundRect = (node) => {
     if (node.nodeType === 3) {
         let range = document.createRange();
@@ -898,6 +900,22 @@ let getBoundRect = (node) => {
         return rect;
     } else {
         return node.getBoundingClientRect();
+    }
+};
+
+let getFontSize = (node) => {
+    if (node.nodeType === 3) {
+        return pxToInt(window.getComputedStyle(node.parentNode).getPropertyValue('font-size'));
+    } else if (node.nodeType === 1) {
+        return pxToInt(window.getComputedStyle(node).getPropertyValue('font-size'));
+    }
+};
+
+let getColor = (node) => {
+    if (node.nodeType === 3) {
+        return onecolor(window.getComputedStyle(node.parentNode).getPropertyValue('color')).cssa();
+    } else if (node.nodeType === 1) {
+        return onecolor(window.getComputedStyle(node).getPropertyValue('color')).cssa();
     }
 };
 
@@ -931,13 +949,15 @@ ImageInnerNode.prototype.getImageUrl = function() {
 };
 
 let pxToInt = (px) => {
-    return Number(px.substring(0, px.length - 2));
+    return px.indexOf('px') !== -1 ? Number(px.substring(0, px.length - 2)) : Number(px);
 };
 
 module.exports = {
     getBoundRect,
     ImageInnerNode,
-    pxToInt
+    pxToInt,
+    getFontSize,
+    getColor
 };
 
 
@@ -11458,6 +11478,7 @@ let match = (content, rule) => {
 
     let patternWay = getPatternWay(rule);
 
+
     return patternWay(pattern, content);
 };
 
@@ -11668,16 +11689,22 @@ module.exports = (node) => {
 let onecolor = __webpack_require__(12);
 
 let {
-    pxToInt
+    getFontSize, getColor
 } = __webpack_require__(7);
 
 let getStyle = (styleName) => (node) => {
+    if ((node.nodeType === 1 || node.nodeType === 3) && styleName === 'font-size') {
+        return getFontSize(node);
+    }
+    if ((node.nodeType === 1 || node.nodeType === 3) && styleName === 'color') {
+        return getColor(node);
+    }
+
     if (node.nodeType !== 1) return null;
+
     let ret = window.getComputedStyle(node).getPropertyValue(styleName);
-    if (styleName === 'background-color' || styleName === 'color') {
+    if (styleName === 'background-color') {
         ret = onecolor(ret).cssa();
-    } else if (styleName === 'font-size') {
-        ret = pxToInt(ret);
     }
     return ret;
 };
@@ -12233,7 +12260,7 @@ module.exports = ({
 
 
 let {
-    udView, debugTooler, collectMatchInfos
+    udView, debugTooler, collectMatchInfos, search
 } = __webpack_require__(40);
 
 let {
@@ -12252,6 +12279,9 @@ document.body.appendChild(udView({
             showLight(v);
 
             console.log(collectMatchInfos(document.querySelector('img'), v, gridScope));
+            console.log(search(document.querySelectorAll('*'), v, {
+                gridScope
+            }));
         } catch (err) {
             console.log(err); // eslint-disable-line
         }

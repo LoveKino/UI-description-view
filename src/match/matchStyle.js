@@ -20,6 +20,7 @@ let match = (content, rule) => {
 
     let patternWay = getPatternWay(rule);
 
+
     return patternWay(pattern, content);
 };
 

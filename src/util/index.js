@@ -1,5 +1,7 @@
 'use strict';
 
+let onecolor = require('onecolor');
+
 let getBoundRect = (node) => {
     if (node.nodeType === 3) {
         let range = document.createRange();
@@ -9,6 +11,22 @@ let getBoundRect = (node) => {
         return rect;
     } else {
         return node.getBoundingClientRect();
+    }
+};
+
+let getFontSize = (node) => {
+    if (node.nodeType === 3) {
+        return pxToInt(window.getComputedStyle(node.parentNode).getPropertyValue('font-size'));
+    } else if (node.nodeType === 1) {
+        return pxToInt(window.getComputedStyle(node).getPropertyValue('font-size'));
+    }
+};
+
+let getColor = (node) => {
+    if (node.nodeType === 3) {
+        return onecolor(window.getComputedStyle(node.parentNode).getPropertyValue('color')).cssa();
+    } else if (node.nodeType === 1) {
+        return onecolor(window.getComputedStyle(node).getPropertyValue('color')).cssa();
     }
 };
 
@@ -42,11 +60,13 @@ ImageInnerNode.prototype.getImageUrl = function() {
 };
 
 let pxToInt = (px) => {
-    return Number(px.substring(0, px.length - 2));
+    return px.indexOf('px') !== -1 ? Number(px.substring(0, px.length - 2)) : Number(px);
 };
 
 module.exports = {
     getBoundRect,
     ImageInnerNode,
-    pxToInt
+    pxToInt,
+    getFontSize,
+    getColor
 };

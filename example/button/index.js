@@ -1,7 +1,7 @@
 'use strict';
 
 let {
-    udView, debugTooler, collectMatchInfos
+    udView, debugTooler, collectMatchInfos, search
 } = require('../../src');
 
 let {
@@ -20,6 +20,9 @@ document.body.appendChild(udView({
             showLight(v);
 
             console.log(collectMatchInfos(document.querySelector('img'), v, gridScope));
+            console.log(search(document.querySelectorAll('*'), v, {
+                gridScope
+            }));
         } catch (err) {
             console.log(err); // eslint-disable-line
         }

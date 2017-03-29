@@ -3,16 +3,22 @@
 let onecolor = require('onecolor');
 
 let {
-    pxToInt
+    getFontSize, getColor
 } = require('../../util');
 
 let getStyle = (styleName) => (node) => {
+    if ((node.nodeType === 1 || node.nodeType === 3) && styleName === 'font-size') {
+        return getFontSize(node);
+    }
+    if ((node.nodeType === 1 || node.nodeType === 3) && styleName === 'color') {
+        return getColor(node);
+    }
+
     if (node.nodeType !== 1) return null;
+
     let ret = window.getComputedStyle(node).getPropertyValue(styleName);
-    if (styleName === 'background-color' || styleName === 'color') {
+    if (styleName === 'background-color') {
         ret = onecolor(ret).cssa();
-    } else if (styleName === 'font-size') {
-        ret = pxToInt(ret);
     }
     return ret;
 };
