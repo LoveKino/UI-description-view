@@ -11,7 +11,7 @@ let getStyle = (styleName) => (node) => {
         return pxToInt(getFontSize(node));
     }
     if ((node.nodeType === 1 || node.nodeType === 3) && styleName === 'color') {
-        return color(getColor(node)).cssa();
+        return onecolor(getColor(node)).cssa();
     }
 
     if (node.nodeType !== 1) return null;

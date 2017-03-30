@@ -28,11 +28,6 @@ let match = (node, {
         bottom, height, left, right, top, width, leftOffset
     };
 
-    if(node.nodeType === 3 && node.textContent.indexOf('text') !== -1) {
-        console.log(node, rect, position, gridScope);
-        console.log(insideBox(rect, position, gridScope));
-    }
-
     return insideBox(rect, position, gridScope) && any(content, (item) => {
         return matchContent.match(matchContent.getContent(node, item), item);
     }) && any(style, (item) => {

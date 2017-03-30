@@ -17,7 +17,7 @@ let getBoundRect = (node) => {
         };
 
         let {
-            lefts, rights, tops, bottoms, widths, heights
+            lefts, rights, tops, bottoms, widths
         } = clientRects.reduce((prev, {
             left, right, bottom, top, width, height
         }) => {
