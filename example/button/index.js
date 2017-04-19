@@ -8,13 +8,15 @@ let {
     lightupSearch
 } = debugTooler;
 
+let {mount} = require('kabanery');
+
 let gridScope = wndsize();
 gridScope.x = 400;
 gridScope.width = gridScope.width - 400;
 
 let showLight = lightupSearch(document.body, gridScope, document.querySelectorAll('#searchItem *'));
 
-document.body.appendChild(udView({
+mount(udView({
     onchange: (v) => {
         try {
             showLight(v);
@@ -27,7 +29,7 @@ document.body.appendChild(udView({
             console.log(err); // eslint-disable-line
         }
     }
-}));
+}), document.body);
 
 function wndsize() {
     var w = 0;
