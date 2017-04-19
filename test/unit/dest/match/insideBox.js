@@ -7,7 +7,7 @@
  * [
  *  [[
  *      {left: 60, right: 74, top: 797, bottom: 859, height: 32, width: 14},
- *      [[85, 27], [[4, 24], [5, 25]]],
+ *      [[63, 37], [[4, 24], [5, 25]]],
  *      {height: 874, width: 1200, x: 0, y: 0}],
  *  true]
  * ]
@@ -22,6 +22,7 @@ let inside = ({
     let [rightGrid, bottomGrid] = area[1];
     let leftTopCoord = getGridCoord(gridScope, grid, [leftGrid, topGrid]);
     let rightBottomCoord = getGridCoord(gridScope, grid, [rightGrid + 1, bottomGrid + 1]);
+    console.log(leftTopCoord, rightBottomCoord);
 
     return insideBox([left, top], leftTopCoord, rightBottomCoord) && insideBox([right, bottom], leftTopCoord, rightBottomCoord);
 };
@@ -70,3 +71,10 @@ function wndsize() {
 }
 
 module.exports = inside;
+
+
+!(function () {
+    var __exportsVariable = require('/Users/yuer/workspaceforme/category/career/container/common/ui/UI-description-view/node_modules/defcomment/src/unit').exportsVariable;
+    __exportsVariable('/Users/yuer/workspaceforme/category/career/container/common/ui/UI-description-view/test/unit/dest/match/insideBox.js', 'inside', inside);
+__exportsVariable('/Users/yuer/workspaceforme/category/career/container/common/ui/UI-description-view/test/unit/dest/match/insideBox.js', 'getGridCoord', getGridCoord);
+})();

@@ -8,7 +8,8 @@
     "test": "test"
   },
   "scripts": {
-    "test": "mocha test/node/**/*.js"
+    "test": "mocha test/node/**/*.js",
+    "unit-test": "deftest -s src -d test/unit/dest -t test/unit/test"
   },
   "repository": {
     "type": "git",
@@ -26,6 +27,8 @@
   },
   "homepage": "https://github.com/LoveKino/UI-description-view#readme",
   "devDependencies": {
+    "browser-js-env": "0.0.9",
+    "defcomment": "^0.4.7",
     "mocha": "^3.2.0",
     "webpack": "^2.2.1"
   },
@@ -33,9 +36,9 @@
     "basetype": "^0.1.4",
     "bolzano": "^0.1.1",
     "color-similarity": "0.0.1",
-    "kabanery": "^0.1.6",
-    "kabanery-select": "0.0.1",
-    "leta-ui": "^0.1.14",
+    "kabanery": "^0.1.10",
+    "kabanery-select": "0.0.3",
+    "leta-ui": "^0.1.16",
     "onecolor": "^3.0.4"
   }
 }

@@ -296,7 +296,69 @@ module.exports = {
 /* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
+"use strict";
+
+
 module.exports = __webpack_require__(68);
+
+/**
+ * @readme-quick-run
+ *
+ * Basic way to construct a view.
+ *
+ * [readme-lang:zh]构造一个组件的简单方法
+ *
+ * ## test tar=js r_c=kabanery env=browser
+ * let {view, n, mount} = kabanery;
+ *
+ * let MyView = view((data) => {
+ *      let {type} = data;
+ *
+ *      return n('div', {
+ *         id: 'a',
+ *         style: {
+ *            fontSize: 10
+ *         }
+ *      },[
+ *          type === 2 && n('span', 'second'),
+ *          type === 3 && n('div', 'third')
+ *      ]);
+ * });
+ *
+ * mount(MyView({type: 3}), document.body);
+ *
+ * console.log(document.getElementById('a').outerHTML); // print result
+ */
+
+/**
+ * @readme-quick-run
+ *
+ * Using update api to update a view.
+ *
+ * [readme-lang:zh]运用update api去更新一个view
+ *
+ * ## test tar=js r_c=kabanery env=browser
+ * let {view, n, mount} = kabanery;
+ *
+ * let MyView = view((data, {update}) => {
+ *      return n('div', {
+ *         id: 'a',
+ *         style: {
+ *            fontSize: 10
+ *         },
+ *         onclick: () => {
+ *            update('show', !data.show);
+ *         }
+ *      }, [
+ *          data.show && n('div', 'show text')
+ *      ]);
+ * });
+ *
+ * mount(MyView({show: false}), document.body);
+ *
+ * document.getElementById('a').click(); // simulate user action
+ * console.log(document.getElementById('a').outerHTML); // print result
+ */
 
 
 /***/ }),
@@ -310,7 +372,7 @@ let {
     isObject, funType, or, isString, isFalsy, likeArray
 } = __webpack_require__(0);
 
-let iterate = __webpack_require__(13);
+let iterate = __webpack_require__(12);
 
 let {
     map, reduce, find, findIndex, forEach, filter, any, exist, compact, reverse, overArgs
@@ -467,7 +529,7 @@ let {
     isObject, funType, or, isString, isFalsy, likeArray
 } = __webpack_require__(0);
 
-let iterate = __webpack_require__(23);
+let iterate = __webpack_require__(22);
 
 let {
     map, reduce, find, findIndex, forEach, filter, any, exist, compact
@@ -575,7 +637,7 @@ module.exports = {
 
 let {
     dsl, interpreter
-} = __webpack_require__(11);
+} = __webpack_require__(10);
 
 let {
     PREDICATE, VARIABLE, JSON_DATA, ABSTRACTION, APPLICATION,
@@ -906,7 +968,7 @@ let getBoundRect = (node) => {
         };
 
         let {
-            lefts, rights, tops, bottoms, widths, heights
+            lefts, rights, tops, bottoms, widths
         } = clientRects.reduce((prev, {
             left, right, bottom, top, width, height
         }) => {
@@ -1188,55 +1250,6 @@ module.exports = {
 "use strict";
 
 
-let EventMatrix = __webpack_require__(67);
-
-let {
-    addHandler,
-    removeTree,
-    removeNode,
-    getNodeHandleMap,
-    attachDocument
-} = EventMatrix();
-
-let bindEvents = (node, eventMap) => {
-    for (let type in eventMap) {
-        addHandler(type, node, eventMap[type]);
-    }
-};
-
-let clearBelow = removeTree;
-
-let moveNodeEvent = (target, source) => {
-    let handleMap = getNodeHandleMap(source);
-    removeNode(target);
-
-    for (let type in handleMap) {
-        let handlers = handleMap[type];
-        for (let i = 0; i < handlers.length; i++) {
-            let handler = handlers[i];
-            addHandler(type, target, handler);
-        }
-    }
-
-    //
-    removeNode(source);
-};
-
-module.exports = {
-    bindEvents,
-    clearBelow,
-    moveNodeEvent,
-    attachDocument
-};
-
-
-/***/ }),
-/* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
 /**
  * ח calculus
  *
@@ -1274,7 +1287,7 @@ module.exports = {
 
 
 /***/ }),
-/* 12 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__(114)
@@ -1300,7 +1313,7 @@ module.exports = __webpack_require__(114)
 
 
 /***/ }),
-/* 13 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1446,7 +1459,7 @@ module.exports = {
 
 
 /***/ }),
-/* 14 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1498,7 +1511,7 @@ module.exports = ({
 
 
 /***/ }),
-/* 15 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1605,7 +1618,7 @@ module.exports = iterate;
 
 
 /***/ }),
-/* 16 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1623,7 +1636,7 @@ let {
 
 let plus = __webpack_require__(54);
 
-let line = __webpack_require__(17);
+let line = __webpack_require__(16);
 
 let Input = ({
     value = '', onchange, type = 'text', style, placeholder = ''
@@ -1721,7 +1734,7 @@ const id = v => v;
 
 
 /***/ }),
-/* 17 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1752,7 +1765,7 @@ module.exports = ({
 
 
 /***/ }),
-/* 18 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1790,7 +1803,7 @@ module.exports = view((data, {
 
 
 /***/ }),
-/* 19 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1839,7 +1852,7 @@ module.exports = view((data) => {
 
 
 /***/ }),
-/* 20 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1946,7 +1959,7 @@ module.exports = iterate;
 
 
 /***/ }),
-/* 21 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2158,6 +2171,113 @@ module.exports = (data) => {
 
 
 /***/ }),
+/* 21 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    likeArray, isObject, funType, isFunction, isUndefined, or, isNumber, isFalsy, mapType
+} = __webpack_require__(0);
+
+/**
+ *
+ * preidcate: chose items to iterate
+ * limit: when to stop iteration
+ * transfer: transfer item
+ * output
+ */
+let iterate = funType((domain = [], opts = {}) => {
+    let {
+        predicate, transfer, output, limit, def
+    } = opts;
+
+    opts.predicate = predicate || truthy;
+    opts.transfer = transfer || id;
+    opts.output = output || toList;
+    if (limit === undefined) limit = domain && domain.length;
+    limit = opts.limit = stopCondition(limit);
+
+    let rets = def;
+    let count = 0;
+
+    if (likeArray(domain)) {
+        for (let i = 0; i < domain.length; i++) {
+            let itemRet = iterateItem(domain, i, count, rets, opts);
+            rets = itemRet.rets;
+            count = itemRet.count;
+            if (itemRet.stop) return rets;
+        }
+    } else if (isObject(domain)) {
+        for (let name in domain) {
+            let itemRet = iterateItem(domain, name, count, rets, opts);
+            rets = itemRet.rets;
+            count = itemRet.count;
+            if (itemRet.stop) return rets;
+        }
+    }
+
+    return rets;
+}, [
+    or(isObject, isFunction, isFalsy),
+    or(isUndefined, mapType({
+        predicate: or(isFunction, isFalsy),
+        transfer: or(isFunction, isFalsy),
+        output: or(isFunction, isFalsy),
+        limit: or(isUndefined, isNumber, isFunction)
+    }))
+]);
+
+let iterateItem = (domain, name, count, rets, {
+    predicate, transfer, output, limit
+}) => {
+    let item = domain[name];
+    if (limit(rets, item, name, domain, count)) {
+        // stop
+        return {
+            stop: true,
+            count,
+            rets
+        };
+    }
+
+    if (predicate(item)) {
+        rets = output(rets, transfer(item, name, domain, rets), name, domain);
+        count++;
+    }
+    return {
+        stop: false,
+        count,
+        rets
+    };
+};
+
+let stopCondition = (limit) => {
+    if (isUndefined(limit)) {
+        return falsy;
+    } else if (isNumber(limit)) {
+        return (rets, item, name, domain, count) => count >= limit;
+    } else {
+        return limit;
+    }
+};
+
+let toList = (prev, v) => {
+    prev.push(v);
+    return prev;
+};
+
+let truthy = () => true;
+
+let falsy = () => false;
+
+let id = v => v;
+
+module.exports = iterate;
+
+
+/***/ }),
 /* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2271,104 +2391,26 @@ module.exports = iterate;
 "use strict";
 
 
+let EventMatrix = __webpack_require__(67);
+
 let {
-    likeArray, isObject, funType, isFunction, isUndefined, or, isNumber, isFalsy, mapType
-} = __webpack_require__(0);
+    listenEventType,
+    attachDocument
+} = EventMatrix();
 
-/**
- *
- * preidcate: chose items to iterate
- * limit: when to stop iteration
- * transfer: transfer item
- * output
- */
-let iterate = funType((domain = [], opts = {}) => {
-    let {
-        predicate, transfer, output, limit, def
-    } = opts;
+let bindEvents = (node, eventMap) => {
+    // hook event at node
+    node.__eventMap = eventMap;
 
-    opts.predicate = predicate || truthy;
-    opts.transfer = transfer || id;
-    opts.output = output || toList;
-    if (limit === undefined) limit = domain && domain.length;
-    limit = opts.limit = stopCondition(limit);
-
-    let rets = def;
-    let count = 0;
-
-    if (likeArray(domain)) {
-        for (let i = 0; i < domain.length; i++) {
-            let itemRet = iterateItem(domain, i, count, rets, opts);
-            rets = itemRet.rets;
-            count = itemRet.count;
-            if (itemRet.stop) return rets;
-        }
-    } else if (isObject(domain)) {
-        for (let name in domain) {
-            let itemRet = iterateItem(domain, name, count, rets, opts);
-            rets = itemRet.rets;
-            count = itemRet.count;
-            if (itemRet.stop) return rets;
-        }
-    }
-
-    return rets;
-}, [
-    or(isObject, isFunction, isFalsy),
-    or(isUndefined, mapType({
-        predicate: or(isFunction, isFalsy),
-        transfer: or(isFunction, isFalsy),
-        output: or(isFunction, isFalsy),
-        limit: or(isUndefined, isNumber, isFunction)
-    }))
-]);
-
-let iterateItem = (domain, name, count, rets, {
-    predicate, transfer, output, limit
-}) => {
-    let item = domain[name];
-    if (limit(rets, item, name, domain, count)) {
-        // stop
-        return {
-            stop: true,
-            count,
-            rets
-        };
-    }
-
-    if (predicate(item)) {
-        rets = output(rets, transfer(item, name, domain, rets), name, domain);
-        count++;
-    }
-    return {
-        stop: false,
-        count,
-        rets
-    };
-};
-
-let stopCondition = (limit) => {
-    if (isUndefined(limit)) {
-        return falsy;
-    } else if (isNumber(limit)) {
-        return (rets, item, name, domain, count) => count >= limit;
-    } else {
-        return limit;
+    for (let type in eventMap) {
+        listenEventType(type);
     }
 };
 
-let toList = (prev, v) => {
-    prev.push(v);
-    return prev;
+module.exports = {
+    bindEvents,
+    attachDocument
 };
-
-let truthy = () => true;
-
-let falsy = () => false;
-
-let id = v => v;
-
-module.exports = iterate;
 
 
 /***/ }),
@@ -2384,7 +2426,7 @@ let {
 
 let {
     bindEvents
-} = __webpack_require__(10);
+} = __webpack_require__(23);
 
 // TODO general proxy n way
 
@@ -2402,6 +2444,7 @@ let cn = (create) => {
             attrMap, eventMap
         } = splitAttribues(attributes);
 
+        // TODO delay node gen operations
         let node = nodeGen(tagName, attrMap, childs);
 
         // tmp solution
@@ -3099,11 +3142,6 @@ let match = (node, {
         bottom, height, left, right, top, width, leftOffset
     };
 
-    if(node.nodeType === 3 && node.textContent.indexOf('text') !== -1) {
-        console.log(node, rect, position, gridScope);
-        console.log(insideBox(rect, position, gridScope));
-    }
-
     return insideBox(rect, position, gridScope) && any(content, (item) => {
         return matchContent.match(matchContent.getContent(node, item), item);
     }) && any(style, (item) => {
@@ -3210,7 +3248,7 @@ let {
     YUVSimilarity
 } = __webpack_require__(42);
 
-let color = __webpack_require__(12);
+let color = __webpack_require__(11);
 
 let matchSimilarity = (similarity) => (pattern, content) => {
     let patternColor = color(pattern);
@@ -3558,7 +3596,7 @@ module.exports = {
 
 let {
     iterate
-} = __webpack_require__(13);
+} = __webpack_require__(12);
 
 let {
     isFunction
@@ -4139,7 +4177,7 @@ let {
     isObject, funType, or, isString, isFalsy, likeArray
 } = __webpack_require__(0);
 
-let iterate = __webpack_require__(15);
+let iterate = __webpack_require__(14);
 
 let {
     map, reduce, find, findIndex, forEach, filter, any, exist, compact
@@ -4245,7 +4283,7 @@ module.exports = {
 "use strict";
 
 
-let iterate = __webpack_require__(15);
+let iterate = __webpack_require__(14);
 
 let defauls = {
     eq: (v1, v2) => v1 === v2
@@ -4421,7 +4459,7 @@ let {
     n
 } = __webpack_require__(1);
 
-let line = __webpack_require__(17);
+let line = __webpack_require__(16);
 
 module.exports = ({
     width,
@@ -4506,7 +4544,7 @@ let {
     isObject, funType, or, isString, isFalsy, likeArray
 } = __webpack_require__(0);
 
-let iterate = __webpack_require__(20);
+let iterate = __webpack_require__(19);
 
 let {
     map, reduce, find, findIndex, forEach, filter, any, exist, compact
@@ -4612,7 +4650,7 @@ module.exports = {
 "use strict";
 
 
-let iterate = __webpack_require__(20);
+let iterate = __webpack_require__(19);
 
 let defauls = {
     eq: (v1, v2) => v1 === v2
@@ -5149,7 +5187,7 @@ let {
     isObject, funType, or, isString, isFalsy, likeArray
 } = __webpack_require__(0);
 
-let iterate = __webpack_require__(22);
+let iterate = __webpack_require__(21);
 
 let {
     map, reduce, find, findIndex, forEach, filter, any, exist, compact
@@ -5255,7 +5293,7 @@ module.exports = {
 "use strict";
 
 
-let iterate = __webpack_require__(22);
+let iterate = __webpack_require__(21);
 
 let defauls = {
     eq: (v1, v2) => v1 === v2
@@ -5360,7 +5398,7 @@ module.exports = {
 "use strict";
 
 
-let iterate = __webpack_require__(23);
+let iterate = __webpack_require__(22);
 
 let defauls = {
     eq: (v1, v2) => v1 === v2
@@ -5522,41 +5560,32 @@ module.exports = (...args) => {
 
 
 let {
-    findIndex, contain, map, forEach
+    contain
 } = __webpack_require__(4);
 
 module.exports = () => {
-    let matrix = {};
     let docs = [];
+    let eventTypeMap = {};
 
-    let addHandler = (type, node, handler) => {
-        let handlerObjs = matrix[type];
-        if (!handlerObjs) {
+    let listenEventType = (type) => {
+        if (!eventTypeMap[type]) {
             updateDocs(type);
-            // add new type
-            handlerObjs = matrix[type] = [{
-                node,
-                handlers: []
-            }];
         }
-
-        let handlers = getHandlers(type, node);
-        if (!handlers) {
-            handlers = [];
-            matrix[type].push({
-                node,
-                handlers
-            });
-        }
-        if (!contain(handlers, handler)) {
-            handlers.push(handler);
-        }
+        eventTypeMap[type] = true;
     };
 
+    /**
+     * attach document used to accept events
+     */
     let attachDocument = (doc = document) => {
         if (!contain(docs, doc)) {
-            for (let type in matrix) {
-                doc.addEventListener(type, listener(type));
+            for (let type in eventTypeMap) {
+                // prevent multiple version of kabanery to binding multiple times
+                let id = getGlobalEventTypeId(type);
+                if (!doc[id]) {
+                    doc.addEventListener(type, listener(type));
+                    doc[id] = true;
+                }
             }
             docs.push(doc);
         }
@@ -5572,106 +5601,48 @@ module.exports = () => {
         }
     };
 
-    let getNodeHandleMap = (item) => {
-        let map = {};
-        for (let type in matrix) {
-            let handlers = getHandlers(type, item);
-            if (handlers) map[type] = handlers;
-        }
-        return map;
-    };
-
-    let removeHandler = (type, node, handler) => {
-        let handlers = getHandlers(type, node);
-        if (handlers && handler.length) {
-            let index = findIndex(handlers, handler);
-            if (index !== -1) {
-                handlers.splice(index, 1);
-            }
-        }
-    };
-
-    let removeTree = (item) => {
-        for (let type in matrix) {
-            let handlerObjs = matrix[type];
-            for (let i = 0; i < handlerObjs.length; i++) {
-                let {
-                    node
-                } = handlerObjs[i];
-                if (below(node, item)) {
-                    // remove i
-                    handlerObjs.splice(i, 1);
-                    i = i - 1;
-                }
-            }
-        }
-    };
-
-    let removeNode = (item) => {
-        for (let type in matrix) {
-            let handlerObjs = matrix[type];
-            for (let i = 0; i < handlerObjs.length; i++) {
-                let {
-                    node
-                } = handlerObjs[i];
-                if (node === item) {
-                    // remove node
-                    handlerObjs.splice(i, 1);
-                    break;
-                }
-            }
-        }
-    };
-
     let listener = (type) => function(e) {
+        let ctx = this;
         let target = e.target;
-        let nodePath = getNodePath(target);
 
+        // hack the stopPropagration function
         let oldProp = e.stopPropagation;
-        e.stopPropagation = function() {
+        e.stopPropagation = function(...args) {
             e.__stopPropagation = true;
-            oldProp.apply(this, arguments);
+            return oldProp.apply(this, args);
         };
 
-        let handlersList = map(nodePath, (curNode) => getHandlers(type, curNode));
-        forEach(handlersList, (handlers) => {
-            if (handlers && handlers.length) {
-                for (let j = 0; j < handlers.length; j++) {
-                    if (e.__stopPropagation) {
-                        return true;
-                    }
+        let nodePath = getNodePath(target);
 
-                    let handler = handlers[j];
-                    handler.apply(this, [e]);
-                }
-            }
-        });
+        for (let i = 0; i < nodePath.length; i++) {
+            let node = nodePath[i];
+            applyNodeHandlers(e, type, node, ctx);
+        }
     };
 
-    let getHandlers = (type, target) => {
-        let handlerObjs = matrix[type];
-        for (let i = 0; i < handlerObjs.length; i++) {
-            let {
-                node, handlers
-            } = handlerObjs[i];
-            if (node === target) {
-                return handlers;
-            }
+    let applyNodeHandlers = (e, type, node, ctx) => {
+        if (e.__stopPropagation) { // event already been stoped by child node
+            return true;
         }
 
-        return null;
+        let handler = getHandler(type, node);
+        return handler && handler.apply(ctx, [e]);
+    };
+
+    let getHandler = (type, target) => {
+        let eventMap = target && target.__eventMap;
+        return eventMap && eventMap[type];
     };
 
     return {
-        addHandler,
-        removeHandler,
-        removeTree,
-        removeNode,
-        getNodeHandleMap,
+        listenEventType,
         attachDocument
     };
 };
 
+/**
+ * get the path of node
+ */
 let getNodePath = (target) => {
     let paths = [];
     while (target) {
@@ -5681,14 +5652,7 @@ let getNodePath = (target) => {
     return paths;
 };
 
-let below = (node, ancestor) => {
-    while (node) {
-        if (node === ancestor) {
-            return true;
-        }
-        node = node.parentNode;
-    }
-};
+let getGlobalEventTypeId = (type) => `__event_type_id_${type}`;
 
 
 /***/ }),
@@ -5736,7 +5700,7 @@ module.exports = {
 
 let {
     attachDocument
-} = __webpack_require__(10);
+} = __webpack_require__(23);
 
 let {
     isNode
@@ -5746,13 +5710,19 @@ let {
     flat, forEach
 } = __webpack_require__(4);
 
-module.exports = (rootNode, parentNode) => {
-    rootNode = flat(rootNode);
-    forEach(rootNode, (item) => {
+/**
+ * @param parentNode
+ *      the dom node used hook node we rendered
+ */
+module.exports = (kabaneryRoots, parentNode) => {
+    kabaneryRoots = flat(kabaneryRoots);
+    forEach(kabaneryRoots, (item) => {
         if (isNode(item)) {
             parentNode.appendChild(item);
         }
     });
+
+    // attach to document
     attachDocument(getDoc(parentNode));
 };
 
@@ -5894,10 +5864,6 @@ module.exports = applyAttibutes;
 
 
 let {
-    moveNodeEvent, clearBelow
-} = __webpack_require__(10);
-
-let {
     toArray
 } = __webpack_require__(9);
 
@@ -5914,8 +5880,6 @@ let applyAttibutes = __webpack_require__(73);
 let replaceDirectly = (node, newNode) => {
     let parent = node.parentNode;
     if (parent) {
-        // clear node's events
-        clearBelow(node);
         // replace
         parent.replaceChild(newNode, node);
         return newNode;
@@ -5927,7 +5891,6 @@ let replaceDirectly = (node, newNode) => {
 let removeOldNode = (oldNode) => {
     let parent = oldNode.parentNode;
     if (parent) {
-        clearBelow(oldNode);
         parent.removeChild(oldNode);
     }
 };
@@ -5964,8 +5927,6 @@ let diffNode = (node, newNode) => {
 let editNode = (node, newNode) => {
     // attributes
     applyAttibutes(node, newNode);
-    // events
-    moveNodeEvent(node, newNode);
     // transfer context
     if (newNode.ctx) {
         newNode.ctx.transferCtx(node);
@@ -6314,7 +6275,7 @@ module.exports = form;
 "use strict";
 
 
-let InputList = __webpack_require__(16);
+let InputList = __webpack_require__(15);
 
 let {
     JSON_DATA
@@ -6643,7 +6604,7 @@ let {
 
 let {
     dsl
-} = __webpack_require__(11);
+} = __webpack_require__(10);
 
 let {
     mergeMap
@@ -6816,7 +6777,7 @@ let {
     contain
 } = __webpack_require__(2);
 
-let fold = __webpack_require__(18);
+let fold = __webpack_require__(17);
 
 let foldArrow = __webpack_require__(55);
 
@@ -7331,7 +7292,7 @@ let getExpressionViewOptions = (data, update) => {
 
 let {
     dsl
-} = __webpack_require__(11);
+} = __webpack_require__(10);
 
 let {
     destruct,
@@ -7651,11 +7612,11 @@ let {
     view, n
 } = __webpack_require__(1);
 
-let fold = __webpack_require__(18);
+let fold = __webpack_require__(17);
 
-let triangle = __webpack_require__(14);
+let triangle = __webpack_require__(13);
 
-let TreeSelect = __webpack_require__(21);
+let TreeSelect = __webpack_require__(20);
 
 let {
     mergeMap
@@ -7743,7 +7704,7 @@ let {
     view
 } = __webpack_require__(1);
 
-let SelectView = __webpack_require__(19);
+let SelectView = __webpack_require__(18);
 
 module.exports = view((data) => {
     let {
@@ -7947,9 +7908,9 @@ let {
     isFunction
 } = __webpack_require__(0);
 
-let TreeSelect = __webpack_require__(21);
+let TreeSelect = __webpack_require__(20);
 
-let triangle = __webpack_require__(14);
+let triangle = __webpack_require__(13);
 
 let {
     PREDICATE, VARIABLE
@@ -8083,7 +8044,7 @@ let {
     n, view
 } = __webpack_require__(1);
 
-let InputList = __webpack_require__(16);
+let InputList = __webpack_require__(15);
 
 let {
     reduce, map
@@ -11400,7 +11361,19 @@ module.exports = {
 "use strict";
 
 
-module.exports = ({
+
+/**
+ * ## test
+ *
+ * [
+ *  [[
+ *      {left: 60, right: 74, top: 797, bottom: 859, height: 32, width: 14},
+ *      [[85, 27], [[4, 24], [5, 25]]],
+ *      {height: 874, width: 1200, x: 0, y: 0}],
+ *  true]
+ * ]
+ */
+let inside = ({
     left, top, right, bottom
 }, position, gridScope) => {
     gridScope = gridScope || wndsize();
@@ -11418,6 +11391,12 @@ let insideBox = ([x, y], [l, t], [r, b]) => {
     return x >= l && y >= t && x <= r && y <= b;
 };
 
+/**
+ * ## test
+ * [
+ *    [[{width:1200,height:874,x:0,y:0}, [85, 27], [5 + 1, 25 + 1]], [84.70588235294117,841.6296296296297]]
+ * ]
+ */
 let getGridCoord = (scope, [m, n], [t, r]) => {
     return [
         (scope.width / m) * t + scope.x, (scope.height / n) * r + scope.y
@@ -11450,6 +11429,8 @@ function wndsize() {
         y: 0
     };
 }
+
+module.exports = inside;
 
 
 /***/ }),
@@ -11518,7 +11499,7 @@ let styleExtractorMap = __webpack_require__(145);
 
 let patternMap = __webpack_require__(34);
 
-let onecolor = __webpack_require__(12);
+let onecolor = __webpack_require__(11);
 
 let {
     pxToInt
@@ -11742,7 +11723,7 @@ module.exports = (node) => {
 "use strict";
 
 
-let onecolor = __webpack_require__(12);
+let onecolor = __webpack_require__(11);
 
 let {
     getFontSize, getColor, pxToInt
@@ -11753,7 +11734,7 @@ let getStyle = (styleName) => (node) => {
         return pxToInt(getFontSize(node));
     }
     if ((node.nodeType === 1 || node.nodeType === 3) && styleName === 'color') {
-        return color(getColor(node)).cssa();
+        return onecolor(getColor(node)).cssa();
     }
 
     if (node.nodeType !== 1) return null;
@@ -12205,7 +12186,7 @@ let {
     map
 } = __webpack_require__(2);
 
-let Select = __webpack_require__(19);
+let Select = __webpack_require__(18);
 
 /**
  * content description
