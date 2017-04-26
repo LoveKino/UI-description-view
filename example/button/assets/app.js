@@ -5801,8 +5801,8 @@ module.exports = (obj, path) => (tagName, attributes, childExp) => {
         childExp.unshift(value);
     }
 
-    if (!attributes.onkeyup) {
-        attributes.onkeyup = (e) => {
+    if (!attributes.oninput) {
+        attributes.oninput = (e) => {
             set(obj, path, e.target.value);
         };
     }
@@ -5927,10 +5927,17 @@ let diffNode = (node, newNode) => {
 let editNode = (node, newNode) => {
     // attributes
     applyAttibutes(node, newNode);
+
     // transfer context
     if (newNode.ctx) {
         newNode.ctx.transferCtx(node);
     }
+
+    // transfer event map
+    if (newNode.__eventMap) {
+        node.__eventMap = newNode.__eventMap;
+    }
+
     let orinChildNodes = toArray(node.childNodes);
     let newChildNodes = toArray(newNode.childNodes);
 
@@ -6237,7 +6244,8 @@ let form = ({
     expressionType,
     getSuffixParams
 }, {
-    title
+    title,
+    inline = true
 } = {}) => {
     let parts = value.path.split('.');
     title = title || parts[parts.length - 1];
@@ -6252,7 +6260,8 @@ let form = ({
         map(getSuffixParams(0), (item) => {
             return n('div', {
                 style: {
-                    padding: 8
+                    padding: 8,
+                    display: inline ? 'inline-block' : 'block'
                 }
             }, item);
         })
@@ -11323,6 +11332,7 @@ let {
 } = __webpack_require__(7);
 
 let lightupSearch = (parent, gridScope, topNode) => {
+    gridScope = gridScope || wndsize();
     let hintGrid = gridHelperView({
         gridScope
     });
@@ -11348,6 +11358,33 @@ let lightupSearch = (parent, gridScope, topNode) => {
         return nodes;
     };
 };
+
+function wndsize() {
+    var w = 0;
+    var h = 0;
+    //IE
+    if (!window.innerWidth) {
+        if (!(document.documentElement.clientWidth === 0)) {
+            //strict mode
+            w = document.documentElement.clientWidth;
+            h = document.documentElement.clientHeight;
+        } else {
+            //quirks mode
+            w = document.body.clientWidth;
+            h = document.body.clientHeight;
+        }
+    } else {
+        //w3c
+        w = window.innerWidth;
+        h = window.innerHeight;
+    }
+    return {
+        width: w,
+        height: h,
+        x: 0,
+        y: 0
+    };
+}
 
 module.exports = {
     lightupSearch
@@ -11912,6 +11949,7 @@ module.exports = view((data) => {
                     });
                 }, {
                     viewer: SimpleForm,
+                    inline: false,
                     title: lang('describe a UI element')
                 }),
 
@@ -12304,13 +12342,15 @@ let {
     lightupSearch
 } = debugTooler;
 
+let {mount} = __webpack_require__(1);
+
 let gridScope = wndsize();
 gridScope.x = 400;
 gridScope.width = gridScope.width - 400;
 
 let showLight = lightupSearch(document.body, gridScope, document.querySelectorAll('#searchItem *'));
 
-document.body.appendChild(udView({
+mount(udView({
     onchange: (v) => {
         try {
             showLight(v);
@@ -12323,7 +12363,7 @@ document.body.appendChild(udView({
             console.log(err); // eslint-disable-line
         }
     }
-}));
+}), document.body);
 
 function wndsize() {
     var w = 0;

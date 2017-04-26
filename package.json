@@ -1,6 +1,6 @@
 {
   "name": "ui-description-view",
-  "version": "0.0.37",
+  "version": "0.0.38",
   "description": "ui description view",
   "main": "index.js",
   "directories": {
@@ -38,7 +38,7 @@
     "color-similarity": "0.0.1",
     "kabanery": "^0.1.11",
     "kabanery-select": "0.0.4",
-    "leta-ui": "^0.1.17",
+    "leta-ui": "^0.1.19",
     "onecolor": "^3.0.4"
   }
 }

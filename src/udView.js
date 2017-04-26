@@ -113,6 +113,7 @@ module.exports = view((data) => {
                     });
                 }, {
                     viewer: SimpleForm,
+                    inline: false,
                     title: lang('describe a UI element')
                 }),
 
