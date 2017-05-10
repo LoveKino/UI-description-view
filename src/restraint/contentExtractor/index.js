@@ -17,7 +17,7 @@ let placeholder = (node) => {
         return undefined; // using undefined as the fail situation
     }
 
-    return getPlaceholder(node);
+    return getPlaceholder(node) || '';
 };
 
 module.exports = {
