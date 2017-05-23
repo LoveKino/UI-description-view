@@ -1,23 +1,23 @@
 'use strict';
 
-let InsideBox = require('../src/search/insideBox');
+let InsideBox = require('../../src/match/insideBox');
 
 let assert = require('assert');
 
 describe('insideBox', () => {
     it('base', () => {
-        let insideBox = InsideBox({
-            x: 0,
-            y: 0,
-            height: 459,
-            width: 720
-        }, [
+        let insideBox = (rect) => InsideBox(rect, [
             [3, 3],
             [
                 [2, 0],
                 [2, 0]
             ]
-        ]);
+        ], {
+            x: 0,
+            y: 0,
+            height: 459,
+            width: 720
+        });
 
         assert.equal(insideBox({
             left: 630,
@@ -35,18 +35,18 @@ describe('insideBox', () => {
     });
 
     it('base2', () => {
-        let insideBox = InsideBox({
-            x: 0,
-            y: 0,
-            height: 459,
-            width: 720
-        }, [
+        let insideBox = (rect) => InsideBox(rect, [
             [3, 3],
             [
                 [1, 0],
                 [2, 0]
             ]
-        ]);
+        ], {
+            x: 0,
+            y: 0,
+            height: 459,
+            width: 720
+        });
 
         assert.equal(insideBox({
             left: 630,
