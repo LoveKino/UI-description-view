@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 191);
+/******/ 	return __webpack_require__(__webpack_require__.s = 186);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -299,7 +299,7 @@ module.exports = {
 "use strict";
 
 
-module.exports = __webpack_require__(109);
+module.exports = __webpack_require__(101);
 
 /**
  * @readme-quick-run
@@ -315,7 +315,7 @@ module.exports = __webpack_require__(109);
  *      let {type} = data;
  *
  *      return n('div', {
- *         id: 'a',
+ *         id: 'test1',
  *         style: {
  *            fontSize: 10
  *         }
@@ -327,7 +327,7 @@ module.exports = __webpack_require__(109);
  *
  * mount(MyView({type: 3}), document.body);
  *
- * console.log(document.getElementById('a').outerHTML); // print result
+ * console.log(document.getElementById('test1').outerHTML); // print result
  */
 
 /**
@@ -372,11 +372,11 @@ let {
     isObject, funType, or, isString, isFalsy, likeArray
 } = __webpack_require__(0);
 
-let iterate = __webpack_require__(16);
+let iterate = __webpack_require__(18);
 
 let {
     map, reduce, find, findIndex, forEach, filter, any, exist, compact, reverse, overArgs
-} = __webpack_require__(55);
+} = __webpack_require__(53);
 
 let contain = (list, item, fopts) => findIndex(list, item, fopts) !== -1;
 
@@ -482,7 +482,7 @@ module.exports = {
 
 let {
     reduce
-} = __webpack_require__(77);
+} = __webpack_require__(73);
 let {
     funType, isObject, or, isString, isFalsy
 } = __webpack_require__(0);
@@ -685,11 +685,11 @@ let {
     isObject, funType, or, isString, isFalsy, likeArray
 } = __webpack_require__(0);
 
-let iterate = __webpack_require__(18);
+let iterate = __webpack_require__(36);
 
 let {
     map, reduce, find, findIndex, forEach, filter, any, exist, compact
-} = __webpack_require__(60);
+} = __webpack_require__(98);
 
 let contain = (list, item, fopts) => findIndex(list, item, fopts) !== -1;
 
@@ -795,11 +795,11 @@ let {
     isObject, funType, or, isString, isFalsy, likeArray
 } = __webpack_require__(0);
 
-let iterate = __webpack_require__(37);
+let iterate = __webpack_require__(20);
 
 let {
     map, reduce, find, findIndex, forEach, filter, any, exist, compact
-} = __webpack_require__(106);
+} = __webpack_require__(58);
 
 let contain = (list, item, fopts) => findIndex(list, item, fopts) !== -1;
 
@@ -905,11 +905,11 @@ let {
     isObject, funType, or, isString, isFalsy, likeArray
 } = __webpack_require__(0);
 
-let iterate = __webpack_require__(26);
+let iterate = __webpack_require__(27);
 
 let {
     map, reduce, find, findIndex, forEach, filter, any, exist, compact
-} = __webpack_require__(81);
+} = __webpack_require__(77);
 
 let contain = (list, item, fopts) => findIndex(list, item, fopts) !== -1;
 
@@ -1013,7 +1013,7 @@ module.exports = {
 
 let {
     dsl, interpreter
-} = __webpack_require__(14);
+} = __webpack_require__(16);
 
 let {
     PREDICATE, VARIABLE, JSON_DATA, ABSTRACTION, APPLICATION,
@@ -1028,7 +1028,7 @@ let {
     isFunction, isObject
 } = __webpack_require__(0);
 
-let getLambdaUiValue = __webpack_require__(131);
+let getLambdaUiValue = __webpack_require__(126);
 
 let {
     v, r, method, getJson
@@ -1290,7 +1290,7 @@ module.exports = {
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = function HSL(color) {
-    color.use(__webpack_require__(43));
+    color.use(__webpack_require__(41));
 
     color.installColorSpace('HSL', ['hue', 'saturation', 'lightness', 'alpha'], {
         hsv: function () {
@@ -1467,129 +1467,7 @@ module.exports = (expView, expandor) => {
 /* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-
-let {
-    bindEvents
-} = __webpack_require__(38);
-let {
-    map
-} = __webpack_require__(6);
-let {
-    isObject, isNode
-} = __webpack_require__(0);
-let {
-    createElement, createSvgElement, nodeGener, parseArgs
-} = __webpack_require__(41);
-
-const KABANERY_NODE = 'kabanery_node';
-
-// TODO general proxy n way
-
-let cn = (elementType) => {
-    return (...args) => {
-        let {
-            tagName, attributes, childs
-        } = parseArgs(args);
-
-        // plugin
-        runPlugins(attributes['plugin'], tagName, attributes, childs);
-
-        let {
-            attrMap, eventMap
-        } = splitAttribues(attributes);
-
-        return {
-            tagName,
-            attrMap,
-            eventMap,
-            elementType,
-            type: KABANERY_NODE, childNodes: childs,
-        };
-    };
-};
-
-let isKabaneryNode = (v) => isObject(v) && v.type === KABANERY_NODE;
-
-let bindPlugs = (typen, plugs = []) => (...args) => {
-    let {
-        tagName, attributes, childs
-    } = parseArgs(args);
-
-    let oriPlugs = attributes.plugin = attributes.plugin || [];
-    attributes.plugin = oriPlugs.concat(plugs);
-
-    let node = typen(tagName, attributes, childs);
-
-    return node;
-};
-
-let runPlugins = (plugs = [], tagName, attributes, childExp) => {
-    for (let i = 0; i < plugs.length; i++) {
-        let plug = plugs[i];
-        plug && plug(tagName, attributes, childExp);
-    }
-};
-
-let splitAttribues = (attributes) => {
-    let attrMap = {},
-        eventMap = {};
-    for (let name in attributes) {
-        let item = attributes[name];
-        if (name.indexOf('on') === 0) {
-            eventMap[name.substring(2)] = item;
-        } else if (name !== 'plugin') {
-            attrMap[name] = item;
-        }
-    }
-    return {
-        attrMap,
-        eventMap
-    };
-};
-
-let reduceNode = (node) => {
-    if (isKabaneryNode(node)) {
-        let nodeGen = null;
-        if (node.elementType === 'html') {
-            nodeGen = nodeGener(createElement);
-        } else {
-            nodeGen = nodeGener(createSvgElement);
-        }
-
-        let tarNode = nodeGen(node.tagName, node.attrMap, map(node.childNodes, reduceNode));
-        bindEvents(tarNode, node.eventMap);
-
-        return tarNode;
-    } else {
-        return node;
-    }
-};
-
-let toHTML = (node) => {
-    if (isNode(node)) {
-        return node.outerHTML;
-    } else if (isKabaneryNode(node)) {
-        let {
-            tagName, attrMap, childNodes
-        } = node;
-        let attrStr = map(attrMap, (value, key) => `${key}="${value}"`).join(' ');
-        attrStr = attrStr ? ' ' + attrStr : '';
-        return `<${tagName}${attrStr}>${map(childNodes, toHTML).join('')}</${tagName}>`;
-    } else {
-        return node + '';
-    }
-};
-
-module.exports = {
-    n: cn('html'),
-    svgn: cn('svg'),
-    bindPlugs,
-    isKabaneryNode,
-    reduceNode,
-    toHTML
-};
+module.exports = __webpack_require__(146);
 
 
 /***/ }),
@@ -1599,9 +1477,9 @@ module.exports = {
 "use strict";
 
 
-let shadowFrame = __webpack_require__(73);
+let shadowFrame = __webpack_require__(69);
 
-let startMomenter = __webpack_require__(74);
+let startMomenter = __webpack_require__(70);
 
 let getX = (elem) => {
     var x = 0;
@@ -1690,6 +1568,161 @@ module.exports = {
 "use strict";
 
 
+let {
+    map
+} = __webpack_require__(5);
+let {
+    isObject, isNode
+} = __webpack_require__(0);
+
+let parseArgs = __webpack_require__(103);
+
+const KABANERY_NODE = 'kabanery_node';
+
+// TODO general proxy n way
+
+let cn = (elementType) => {
+    return (...args) => {
+        let {
+            tagName, attributes, childs
+        } = parseArgs(args);
+
+        if (isKabaneryNode(attributes)) {
+            childs = [attributes];
+            attributes = {};
+        }
+
+        // plugin
+        runPlugins(attributes['plugin'], tagName, attributes, childs);
+
+        let {
+            attrMap, eventMap
+        } = splitAttribues(attributes);
+
+        return {
+            tagName,
+            attrMap,
+            eventMap,
+            elementType,
+            type: KABANERY_NODE, childNodes: childs,
+        };
+    };
+};
+
+let isKabaneryNode = (v) => isObject(v) && v.type === KABANERY_NODE;
+
+let bindPlugs = (typen, plugs = []) => (...args) => {
+    let {
+        tagName, attributes, childs
+    } = parseArgs(args);
+
+    let oriPlugs = attributes.plugin = attributes.plugin || [];
+    attributes.plugin = oriPlugs.concat(plugs);
+
+    let node = typen(tagName, attributes, childs);
+
+    return node;
+};
+
+let runPlugins = (plugs = [], tagName, attributes, childExp) => {
+    for (let i = 0; i < plugs.length; i++) {
+        let plug = plugs[i];
+        plug && plug(tagName, attributes, childExp);
+    }
+};
+
+let splitAttribues = (attributes) => {
+    let attrMap = {},
+        eventMap = {};
+    for (let name in attributes) {
+        let item = attributes[name];
+        if (name.indexOf('on') === 0) {
+            eventMap[name.substring(2)] = item;
+        } else if (name !== 'plugin') {
+            attrMap[name] = item;
+        }
+    }
+    return {
+        attrMap,
+        eventMap
+    };
+};
+
+// TODO svg
+let toHTML = (node) => {
+    if (isNode(node)) {
+        return node.outerHTML;
+    } else if (isKabaneryNode(node)) {
+        let {
+            tagName, attrMap, childNodes
+        } = node;
+        let attrStr = map(attrMap, (value, key) => `${key}="${value}"`).join(' ');
+        attrStr = attrStr ? ' ' + attrStr : '';
+        return `<${tagName}${attrStr}>${map(childNodes, toHTML).join('')}</${tagName}>`;
+    } else {
+        return node + '';
+    }
+};
+
+module.exports = {
+    n: cn('html'),
+    svgn: cn('svg'),
+    bindPlugs,
+    isKabaneryNode,
+    toHTML,
+    parseArgs
+};
+
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    createElement, createSvgElement
+} = __webpack_require__(105);
+
+let {
+    bindEvents
+} = __webpack_require__(37);
+
+let {
+    map
+} = __webpack_require__(5);
+
+let {
+    isKabaneryNode
+} = __webpack_require__(14);
+
+let reduceNode = (node) => {
+    if (isKabaneryNode(node)) {
+        let tarNode = null;
+        if (node.elementType === 'html') {
+            tarNode = createElement(node.tagName, node.attrMap, map(node.childNodes, reduceNode));
+        } else {
+            tarNode = createSvgElement(node.tagName, node.attrMap, map(node.childNodes, reduceNode));
+        }
+
+        bindEvents(tarNode, node.eventMap);
+        return tarNode;
+    } else {
+        return node;
+    }
+};
+
+module.exports = reduceNode;
+
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
 /**
  * ח calculus
  *
@@ -1717,8 +1750,8 @@ module.exports = {
  *      predicate: add
  */
 
-let dsl = __webpack_require__(40);
-let interpreter = __webpack_require__(148);
+let dsl = __webpack_require__(39);
+let interpreter = __webpack_require__(143);
 
 module.exports = {
     dsl,
@@ -1727,33 +1760,33 @@ module.exports = {
 
 
 /***/ }),
-/* 15 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(155)
-    .use(__webpack_require__(44))
-    .use(__webpack_require__(154))
-    .use(__webpack_require__(43))
+module.exports = __webpack_require__(150)
+    .use(__webpack_require__(42))
+    .use(__webpack_require__(149))
+    .use(__webpack_require__(41))
     .use(__webpack_require__(9))
-    .use(__webpack_require__(153))
+    .use(__webpack_require__(148))
 
     // Convenience functions
-    .use(__webpack_require__(162))
-    .use(__webpack_require__(156))
     .use(__webpack_require__(157))
+    .use(__webpack_require__(151))
+    .use(__webpack_require__(152))
+    .use(__webpack_require__(153))
+    .use(__webpack_require__(154))
+    .use(__webpack_require__(155))
+    .use(__webpack_require__(156))
     .use(__webpack_require__(158))
     .use(__webpack_require__(159))
     .use(__webpack_require__(160))
     .use(__webpack_require__(161))
-    .use(__webpack_require__(163))
-    .use(__webpack_require__(164))
-    .use(__webpack_require__(165))
-    .use(__webpack_require__(166))
-    .use(__webpack_require__(167));
+    .use(__webpack_require__(162));
 
 
 /***/ }),
-/* 16 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1899,7 +1932,7 @@ module.exports = {
 
 
 /***/ }),
-/* 17 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1951,7 +1984,7 @@ module.exports = ({
 
 
 /***/ }),
-/* 18 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2058,13 +2091,13 @@ module.exports = iterate;
 
 
 /***/ }),
-/* 19 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-module.exports = __webpack_require__(63);
+module.exports = __webpack_require__(61);
 
 /**
  * @readme-quick-run
@@ -2127,13 +2160,13 @@ module.exports = __webpack_require__(63);
 
 
 /***/ }),
-/* 20 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let EventMatrix = __webpack_require__(62);
+let EventMatrix = __webpack_require__(60);
 
 let {
     listenEventType,
@@ -2156,7 +2189,7 @@ module.exports = {
 
 
 /***/ }),
-/* 21 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2164,11 +2197,11 @@ module.exports = {
 
 let {
     createElement, createSvgElement, parseArgs, nodeGener
-} = __webpack_require__(22);
+} = __webpack_require__(12);
 
 let {
     bindEvents
-} = __webpack_require__(20);
+} = __webpack_require__(22);
 
 // TODO general proxy n way
 
@@ -2241,14 +2274,7 @@ module.exports = {
 
 
 /***/ }),
-/* 22 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(71);
-
-
-/***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2355,13 +2381,13 @@ module.exports = iterate;
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let dynamicList = __webpack_require__(79);
+let dynamicList = __webpack_require__(75);
 
 let {
     map, mergeMap
@@ -2371,9 +2397,9 @@ let {
     n
 } = __webpack_require__(1);
 
-let plus = __webpack_require__(80);
+let plus = __webpack_require__(76);
 
-let line = __webpack_require__(25);
+let line = __webpack_require__(26);
 
 let Input = ({
     value = '', onchange, type = 'text', style, placeholder = ''
@@ -2471,7 +2497,7 @@ const id = v => v;
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2479,7 +2505,7 @@ const id = v => v;
 
 let {
     n
-} = __webpack_require__(27);
+} = __webpack_require__(28);
 
 module.exports = ({
     color = 'black', bold = 3, length = 20, direction = 'vertical'
@@ -2502,7 +2528,7 @@ module.exports = ({
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2609,13 +2635,13 @@ module.exports = iterate;
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-module.exports = __webpack_require__(84);
+module.exports = __webpack_require__(80);
 
 /**
  * @readme-quick-run
@@ -2678,13 +2704,13 @@ module.exports = __webpack_require__(84);
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let EventMatrix = __webpack_require__(83);
+let EventMatrix = __webpack_require__(79);
 
 let {
     listenEventType,
@@ -2707,7 +2733,7 @@ module.exports = {
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2715,11 +2741,11 @@ module.exports = {
 
 let {
     createElement, createSvgElement, parseArgs, nodeGener
-} = __webpack_require__(30);
+} = __webpack_require__(12);
 
 let {
     bindEvents
-} = __webpack_require__(28);
+} = __webpack_require__(29);
 
 // TODO general proxy n way
 
@@ -2792,121 +2818,7 @@ module.exports = {
 
 
 /***/ }),
-/* 30 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(94);
-
-
-/***/ }),
 /* 31 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-let {
-    likeArray, isObject, funType, isFunction, isUndefined, or, isNumber, isFalsy, mapType
-} = __webpack_require__(0);
-
-/**
- *
- * preidcate: chose items to iterate
- * limit: when to stop iteration
- * transfer: transfer item
- * output
- */
-let iterate = funType((domain = [], opts = {}) => {
-    let {
-        predicate, transfer, output, limit, def
-    } = opts;
-
-    opts.predicate = predicate || truthy;
-    opts.transfer = transfer || id;
-    opts.output = output || toList;
-    if (limit === undefined) limit = domain && domain.length;
-    limit = opts.limit = stopCondition(limit);
-
-    let rets = def;
-    let count = 0;
-
-    if (likeArray(domain)) {
-        for (let i = 0; i < domain.length; i++) {
-            let itemRet = iterateItem(domain, i, count, rets, opts);
-            rets = itemRet.rets;
-            count = itemRet.count;
-            if (itemRet.stop) return rets;
-        }
-    } else if (isObject(domain)) {
-        for (let name in domain) {
-            let itemRet = iterateItem(domain, name, count, rets, opts);
-            rets = itemRet.rets;
-            count = itemRet.count;
-            if (itemRet.stop) return rets;
-        }
-    }
-
-    return rets;
-}, [
-    or(isObject, isFunction, isFalsy),
-    or(isUndefined, mapType({
-        predicate: or(isFunction, isFalsy),
-        transfer: or(isFunction, isFalsy),
-        output: or(isFunction, isFalsy),
-        limit: or(isUndefined, isNumber, isFunction)
-    }))
-]);
-
-let iterateItem = (domain, name, count, rets, {
-    predicate, transfer, output, limit
-}) => {
-    let item = domain[name];
-    if (limit(rets, item, name, domain, count)) {
-        // stop
-        return {
-            stop: true,
-            count,
-            rets
-        };
-    }
-
-    if (predicate(item)) {
-        rets = output(rets, transfer(item, name, domain, rets), name, domain);
-        count++;
-    }
-    return {
-        stop: false,
-        count,
-        rets
-    };
-};
-
-let stopCondition = (limit) => {
-    if (isUndefined(limit)) {
-        return falsy;
-    } else if (isNumber(limit)) {
-        return (rets, item, name, domain, count) => count >= limit;
-    } else {
-        return limit;
-    }
-};
-
-let toList = (prev, v) => {
-    prev.push(v);
-    return prev;
-};
-
-let truthy = () => true;
-
-let falsy = () => false;
-
-let id = v => v;
-
-module.exports = iterate;
-
-
-/***/ }),
-/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2944,7 +2856,7 @@ module.exports = view((data, {
 
 
 /***/ }),
-/* 33 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2952,7 +2864,7 @@ module.exports = view((data, {
 
 let {
     map
-} = __webpack_require__(97);
+} = __webpack_require__(89);
 
 let {
     n, view
@@ -2993,7 +2905,7 @@ module.exports = view((data) => {
 
 
 /***/ }),
-/* 34 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3100,7 +3012,7 @@ module.exports = iterate;
 
 
 /***/ }),
-/* 35 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3120,15 +3032,15 @@ let {
 
 let {
     getWindowWidth, getWindowHeight
-} = __webpack_require__(100);
+} = __webpack_require__(92);
 
 let {
     hasOwnProperty
-} = __webpack_require__(103);
+} = __webpack_require__(95);
 
-let idgener = __webpack_require__(75);
+let idgener = __webpack_require__(71);
 
-let triangle = __webpack_require__(99);
+let triangle = __webpack_require__(91);
 
 /**
  * @param data Object
@@ -3312,6 +3224,113 @@ module.exports = (data) => {
 
 
 /***/ }),
+/* 35 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    likeArray, isObject, funType, isFunction, isUndefined, or, isNumber, isFalsy, mapType
+} = __webpack_require__(0);
+
+/**
+ *
+ * preidcate: chose items to iterate
+ * limit: when to stop iteration
+ * transfer: transfer item
+ * output
+ */
+let iterate = funType((domain = [], opts = {}) => {
+    let {
+        predicate, transfer, output, limit, def
+    } = opts;
+
+    opts.predicate = predicate || truthy;
+    opts.transfer = transfer || id;
+    opts.output = output || toList;
+    if (limit === undefined) limit = domain && domain.length;
+    limit = opts.limit = stopCondition(limit);
+
+    let rets = def;
+    let count = 0;
+
+    if (likeArray(domain)) {
+        for (let i = 0; i < domain.length; i++) {
+            let itemRet = iterateItem(domain, i, count, rets, opts);
+            rets = itemRet.rets;
+            count = itemRet.count;
+            if (itemRet.stop) return rets;
+        }
+    } else if (isObject(domain)) {
+        for (let name in domain) {
+            let itemRet = iterateItem(domain, name, count, rets, opts);
+            rets = itemRet.rets;
+            count = itemRet.count;
+            if (itemRet.stop) return rets;
+        }
+    }
+
+    return rets;
+}, [
+    or(isObject, isFunction, isFalsy),
+    or(isUndefined, mapType({
+        predicate: or(isFunction, isFalsy),
+        transfer: or(isFunction, isFalsy),
+        output: or(isFunction, isFalsy),
+        limit: or(isUndefined, isNumber, isFunction)
+    }))
+]);
+
+let iterateItem = (domain, name, count, rets, {
+    predicate, transfer, output, limit
+}) => {
+    let item = domain[name];
+    if (limit(rets, item, name, domain, count)) {
+        // stop
+        return {
+            stop: true,
+            count,
+            rets
+        };
+    }
+
+    if (predicate(item)) {
+        rets = output(rets, transfer(item, name, domain, rets), name, domain);
+        count++;
+    }
+    return {
+        stop: false,
+        count,
+        rets
+    };
+};
+
+let stopCondition = (limit) => {
+    if (isUndefined(limit)) {
+        return falsy;
+    } else if (isNumber(limit)) {
+        return (rets, item, name, domain, count) => count >= limit;
+    } else {
+        return limit;
+    }
+};
+
+let toList = (prev, v) => {
+    prev.push(v);
+    return prev;
+};
+
+let truthy = () => true;
+
+let falsy = () => false;
+
+let id = v => v;
+
+module.exports = iterate;
+
+
+/***/ }),
 /* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -3425,114 +3444,7 @@ module.exports = iterate;
 "use strict";
 
 
-let {
-    likeArray, isObject, funType, isFunction, isUndefined, or, isNumber, isFalsy, mapType
-} = __webpack_require__(0);
-
-/**
- *
- * preidcate: chose items to iterate
- * limit: when to stop iteration
- * transfer: transfer item
- * output
- */
-let iterate = funType((domain = [], opts = {}) => {
-    let {
-        predicate, transfer, output, limit, def
-    } = opts;
-
-    opts.predicate = predicate || truthy;
-    opts.transfer = transfer || id;
-    opts.output = output || toList;
-    if (limit === undefined) limit = domain && domain.length;
-    limit = opts.limit = stopCondition(limit);
-
-    let rets = def;
-    let count = 0;
-
-    if (likeArray(domain)) {
-        for (let i = 0; i < domain.length; i++) {
-            let itemRet = iterateItem(domain, i, count, rets, opts);
-            rets = itemRet.rets;
-            count = itemRet.count;
-            if (itemRet.stop) return rets;
-        }
-    } else if (isObject(domain)) {
-        for (let name in domain) {
-            let itemRet = iterateItem(domain, name, count, rets, opts);
-            rets = itemRet.rets;
-            count = itemRet.count;
-            if (itemRet.stop) return rets;
-        }
-    }
-
-    return rets;
-}, [
-    or(isObject, isFunction, isFalsy),
-    or(isUndefined, mapType({
-        predicate: or(isFunction, isFalsy),
-        transfer: or(isFunction, isFalsy),
-        output: or(isFunction, isFalsy),
-        limit: or(isUndefined, isNumber, isFunction)
-    }))
-]);
-
-let iterateItem = (domain, name, count, rets, {
-    predicate, transfer, output, limit
-}) => {
-    let item = domain[name];
-    if (limit(rets, item, name, domain, count)) {
-        // stop
-        return {
-            stop: true,
-            count,
-            rets
-        };
-    }
-
-    if (predicate(item)) {
-        rets = output(rets, transfer(item, name, domain, rets), name, domain);
-        count++;
-    }
-    return {
-        stop: false,
-        count,
-        rets
-    };
-};
-
-let stopCondition = (limit) => {
-    if (isUndefined(limit)) {
-        return falsy;
-    } else if (isNumber(limit)) {
-        return (rets, item, name, domain, count) => count >= limit;
-    } else {
-        return limit;
-    }
-};
-
-let toList = (prev, v) => {
-    prev.push(v);
-    return prev;
-};
-
-let truthy = () => true;
-
-let falsy = () => false;
-
-let id = v => v;
-
-module.exports = iterate;
-
-
-/***/ }),
-/* 38 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-let EventMatrix = __webpack_require__(108);
+let EventMatrix = __webpack_require__(100);
 
 let {
     listenEventType,
@@ -3555,7 +3467,7 @@ module.exports = {
 
 
 /***/ }),
-/* 39 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3662,7 +3574,7 @@ module.exports = iterate;
 
 
 /***/ }),
-/* 40 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3881,14 +3793,7 @@ module.exports = {
 
 
 /***/ }),
-/* 41 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(151);
-
-
-/***/ }),
-/* 42 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3995,7 +3900,7 @@ module.exports = iterate;
 
 
 /***/ }),
-/* 43 */
+/* 41 */
 /***/ (function(module, exports) {
 
 module.exports = function HSV(color) {
@@ -4094,7 +3999,7 @@ module.exports = function HSV(color) {
 
 
 /***/ }),
-/* 44 */
+/* 42 */
 /***/ (function(module, exports) {
 
 module.exports = function XYZ(color) {
@@ -4164,17 +4069,17 @@ module.exports = function XYZ(color) {
 
 
 /***/ }),
-/* 45 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let insideBox = __webpack_require__(177);
+let insideBox = __webpack_require__(172);
 
-let matchContent = __webpack_require__(178);
+let matchContent = __webpack_require__(173);
 
-let matchStyle = __webpack_require__(179);
+let matchStyle = __webpack_require__(174);
 
 let {
     any, map
@@ -4253,7 +4158,7 @@ module.exports = {
 
 
 /***/ }),
-/* 46 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4294,7 +4199,7 @@ module.exports = buildAroundPatterns(10);
 
 
 /***/ }),
-/* 47 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4302,9 +4207,9 @@ module.exports = buildAroundPatterns(10);
 
 let {
     YUVSimilarity
-} = __webpack_require__(56);
+} = __webpack_require__(54);
 
-let color = __webpack_require__(15);
+let color = __webpack_require__(17);
 
 let matchSimilarity = (similarity) => (pattern, content) => {
     let patternColor = color(pattern);
@@ -4341,17 +4246,17 @@ module.exports = buildSimilarityPatterns(10);
 
 
 /***/ }),
-/* 48 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let urlPattern = __webpack_require__(49);
+let urlPattern = __webpack_require__(47);
 
-let colorSimilarityPattern = __webpack_require__(47);
+let colorSimilarityPattern = __webpack_require__(45);
 
-let aroundPercentPattern = __webpack_require__(46);
+let aroundPercentPattern = __webpack_require__(44);
 
 let {
     mergeMap, reduce
@@ -4387,13 +4292,13 @@ module.exports = reduce([
 
 
 /***/ }),
-/* 49 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let url = __webpack_require__(172);
+let url = __webpack_require__(167);
 
 let {
     reduce, mergeMap
@@ -4434,13 +4339,13 @@ module.exports = reduce(['protocol', 'hostname', 'query', 'pathname', 'path', 'h
 
 
 /***/ }),
-/* 50 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let searchIn = __webpack_require__(51);
+let searchIn = __webpack_require__(49);
 
 /**
  * search target nodes accroding to the description of UI
@@ -4464,7 +4369,7 @@ module.exports = (nodes, {
 
 
 /***/ }),
-/* 51 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4476,9 +4381,9 @@ let {
 
 let {
     match
-} = __webpack_require__(45);
+} = __webpack_require__(43);
 
-let expandNodes = __webpack_require__(187);
+let expandNodes = __webpack_require__(182);
 
 /**
  * search target nodes accroding to the description of UI
@@ -4499,7 +4404,7 @@ module.exports = (nodes) => {
 
 
 /***/ }),
-/* 52 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4527,7 +4432,7 @@ module.exports = view(({
 
 
 /***/ }),
-/* 53 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4591,7 +4496,7 @@ let isItemChosen = (i, j, lt, rb) => {
 
 
 /***/ }),
-/* 54 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4603,22 +4508,22 @@ let isItemChosen = (i, j, lt, rb) => {
  * after description a ui element, we can try to search in the page to find some elements which conform to these descriptions.
  */
 
-let udView = __webpack_require__(188);
+let udView = __webpack_require__(183);
 
-let search = __webpack_require__(50);
+let search = __webpack_require__(48);
 
-let searchIn = __webpack_require__(51);
+let searchIn = __webpack_require__(49);
 
-let gridHelperView = __webpack_require__(53);
+let gridHelperView = __webpack_require__(51);
 
-let blinkView = __webpack_require__(52);
+let blinkView = __webpack_require__(50);
 
-let debugTooler = __webpack_require__(176);
+let debugTooler = __webpack_require__(171);
 
 let {
     match,
     collectMatchInfos
-} = __webpack_require__(45);
+} = __webpack_require__(43);
 
 let {
     getBoundRect, ImageInnerNode, getFontSize, getColor
@@ -4644,7 +4549,7 @@ module.exports = {
 
 
 /***/ }),
-/* 55 */
+/* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4652,7 +4557,7 @@ module.exports = {
 
 let {
     iterate
-} = __webpack_require__(16);
+} = __webpack_require__(18);
 
 let {
     isFunction
@@ -4769,14 +4674,14 @@ module.exports = {
 
 
 /***/ }),
-/* 56 */
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(57);
+module.exports = __webpack_require__(55);
 
 
 /***/ }),
-/* 57 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4877,16 +4782,16 @@ module.exports = {
 
 
 /***/ }),
-/* 58 */
+/* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let line = __webpack_require__(59);
+let line = __webpack_require__(57);
 let {
     n
-} = __webpack_require__(19);
+} = __webpack_require__(21);
 
 module.exports = ({
     length = 10, bold = 1, color = 'black', angle = 0, direction
@@ -4930,7 +4835,7 @@ module.exports = ({
 
 
 /***/ }),
-/* 59 */
+/* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4938,7 +4843,7 @@ module.exports = ({
 
 let {
     n
-} = __webpack_require__(19);
+} = __webpack_require__(21);
 
 module.exports = ({
     color = 'black', bold = 3, length = 20, direction = 'vertical', angle = 0
@@ -4963,13 +4868,13 @@ module.exports = ({
 
 
 /***/ }),
-/* 60 */
+/* 58 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let iterate = __webpack_require__(18);
+let iterate = __webpack_require__(20);
 
 let defauls = {
     eq: (v1, v2) => v1 === v2
@@ -5068,7 +4973,7 @@ module.exports = {
 
 
 /***/ }),
-/* 61 */
+/* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5076,7 +4981,7 @@ module.exports = {
 
 let {
     n
-} = __webpack_require__(21);
+} = __webpack_require__(23);
 
 let {
     isArray, isFunction, isObject
@@ -5084,7 +4989,7 @@ let {
 
 let {
     map
-} = __webpack_require__(5);
+} = __webpack_require__(6);
 
 module.exports = (...args) => {
     let tagName = args[0],
@@ -5124,7 +5029,7 @@ module.exports = (...args) => {
 
 
 /***/ }),
-/* 62 */
+/* 60 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5132,7 +5037,7 @@ module.exports = (...args) => {
 
 let {
     contain
-} = __webpack_require__(5);
+} = __webpack_require__(6);
 
 module.exports = () => {
     let docs = [];
@@ -5227,7 +5132,7 @@ let getGlobalEventTypeId = (type) => `__event_type_id_${type}`;
 
 
 /***/ }),
-/* 63 */
+/* 61 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5235,19 +5140,19 @@ let getGlobalEventTypeId = (type) => `__event_type_id_${type}`;
 
 let {
     n, svgn, bindPlugs
-} = __webpack_require__(21);
+} = __webpack_require__(23);
 
 let {
     parseArgs
-} = __webpack_require__(22);
+} = __webpack_require__(12);
 
-let plugs = __webpack_require__(66);
+let plugs = __webpack_require__(64);
 
-let view = __webpack_require__(70);
+let view = __webpack_require__(68);
 
-let mount = __webpack_require__(64);
+let mount = __webpack_require__(62);
 
-let N = __webpack_require__(61);
+let N = __webpack_require__(59);
 
 module.exports = {
     n,
@@ -5263,7 +5168,7 @@ module.exports = {
 
 
 /***/ }),
-/* 64 */
+/* 62 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5271,7 +5176,7 @@ module.exports = {
 
 let {
     attachDocument
-} = __webpack_require__(20);
+} = __webpack_require__(22);
 
 let {
     isNode
@@ -5279,7 +5184,7 @@ let {
 
 let {
     flat, forEach
-} = __webpack_require__(5);
+} = __webpack_require__(6);
 
 /**
  * @param parentNode
@@ -5306,7 +5211,7 @@ let getDoc = (node) => {
 
 
 /***/ }),
-/* 65 */
+/* 63 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5338,14 +5243,14 @@ let wrapEventHandler = (fun, catcher) => {
 
 
 /***/ }),
-/* 66 */
+/* 64 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let twowaybinding = __webpack_require__(67);
-let eventError = __webpack_require__(65);
+let twowaybinding = __webpack_require__(65);
+let eventError = __webpack_require__(63);
 
 module.exports = {
     twowaybinding,
@@ -5354,7 +5259,7 @@ module.exports = {
 
 
 /***/ }),
-/* 67 */
+/* 65 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5381,7 +5286,7 @@ module.exports = (obj, path) => (tagName, attributes, childExp) => {
 
 
 /***/ }),
-/* 68 */
+/* 66 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5397,7 +5302,7 @@ let {
 
 let {
     forEach
-} = __webpack_require__(5);
+} = __webpack_require__(6);
 
 let applyAttibutes = (node, newNode) => {
     // attributes
@@ -5428,7 +5333,7 @@ module.exports = applyAttibutes;
 
 
 /***/ }),
-/* 69 */
+/* 67 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5444,9 +5349,9 @@ let {
 
 let {
     forEach
-} = __webpack_require__(5);
+} = __webpack_require__(6);
 
-let applyAttibutes = __webpack_require__(68);
+let applyAttibutes = __webpack_require__(66);
 
 let replaceDirectly = (node, newNode) => {
     let parent = node.parentNode;
@@ -5560,7 +5465,7 @@ module.exports = (node, newNode) => {
 
 
 /***/ }),
-/* 70 */
+/* 68 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5576,9 +5481,9 @@ let {
 
 let {
     forEach
-} = __webpack_require__(5);
+} = __webpack_require__(6);
 
-let replace = __webpack_require__(69);
+let replace = __webpack_require__(67);
 
 /**
  * render function: (data) => node
@@ -5766,255 +5671,7 @@ module.exports = View;
 
 
 /***/ }),
-/* 71 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-let {
-    isString, isObject, isNode, likeArray, isNumber, isBool
-} = __webpack_require__(0);
-
-let parseAttribute = __webpack_require__(72);
-
-const svgNS = 'http://www.w3.org/2000/svg';
-
-let cn = (create) => {
-    let nodeGen = nodeGener(create);
-    return (...args) => {
-        let {
-            tagName, attributes, childs
-        } = parseArgs(args);
-        return nodeGen(tagName, attributes, childs);
-    };
-};
-
-let nodeGener = (create) => (tagName, attributes, childs) => {
-    let node = create(tagName);
-    applyNode(node, attributes, childs);
-
-    return node;
-};
-
-let parseArgs = (args) => {
-    let tagName,
-        attributes = {},
-        childExp = [];
-
-    let first = args.shift();
-
-    let parts = splitTagNameAttribute(first);
-
-    if (parts.length > 1) { // not only tagName
-        tagName = parts[0];
-        attributes = parts[1];
-    } else {
-        tagName = first;
-    }
-
-    tagName = tagName.toLowerCase().trim();
-
-    let next = args.shift();
-
-    let nextAttr = {};
-
-    if (likeArray(next) ||
-        isString(next) ||
-        isNode(next) ||
-        isNumber(next) ||
-        isBool(next)) {
-        childExp = next;
-    } else if (isObject(next)) {
-        nextAttr = next;
-        childExp = args.shift() || [];
-    }
-
-    attributes = parseAttribute(attributes, nextAttr);
-
-    let childs = parseChildExp(childExp);
-
-    return {
-        tagName,
-        attributes,
-        childs
-    };
-};
-
-let splitTagNameAttribute = (str = '') => {
-    let tagName = str.split(' ')[0];
-    let attr = str.substring(tagName.length);
-    attr = attr && attr.trim();
-    if (attr) {
-        return [tagName, attr];
-    } else {
-        return [tagName];
-    }
-};
-
-let applyNode = (node, attributes, childs) => {
-    setAttributes(node, attributes);
-    for (let i = 0; i < childs.length; i++) {
-        let child = childs[i];
-        if (isString(child)) {
-            node.textContent = child;
-        } else {
-            node.appendChild(child);
-        }
-    }
-};
-
-let setAttributes = (node, attributes) => {
-    for (let name in attributes) {
-        let attr = attributes[name];
-        node.setAttribute(name, attr);
-    }
-};
-
-let parseChildExp = (childExp) => {
-    let ret = [];
-    if (isNode(childExp)) {
-        ret.push(childExp);
-    } else if (likeArray(childExp)) {
-        for (let i = 0; i < childExp.length; i++) {
-            let child = childExp[i];
-            ret = ret.concat(parseChildExp(child));
-        }
-    } else if (childExp) {
-        ret.push(childExp.toString());
-    }
-    return ret;
-};
-
-let createElement = (tagName) => document.createElement(tagName);
-
-let createSvgElement = (tagName) => document.createElementNS(svgNS, tagName);
-
-module.exports = {
-    svgn: cn(createSvgElement),
-    n: cn(createElement),
-    parseArgs,
-    nodeGener,
-    createElement,
-    createSvgElement,
-    cn
-};
-
-
-/***/ }),
-/* 72 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-let {
-    isString, isObject
-} = __webpack_require__(0);
-
-let {
-    mergeMap
-} = __webpack_require__(5);
-
-const ITEM_REG = /([\w-]+)\s*=\s*(([\w-]+)|('.*?')|(".*?"))/;
-
-// TODO better key=value grammer
-// TODO refactor with grammerL: class grammer, id grammer, refer some popular grammer
-let parseAttribute = (attributes, nextAttr) => {
-    // key=value key=value
-    // value='abc' value=true value=123 value="def"
-    if (isString(attributes)) {
-        let str = attributes.trim(),
-            kvs = [];
-
-        let stop = false;
-        while (!stop) {
-            let newstr = str.replace(ITEM_REG, (matchStr, $1, $2) => {
-                kvs.push([$1, $2]);
-                return '';
-            }).trim();
-            if (newstr === str) {
-                stop = true;
-            }
-            str = newstr;
-        }
-
-        attributes = {};
-        for (let i = 0; i < kvs.length; i++) {
-            let [key, value] = kvs[i];
-            if (value[0] === '\'' && value[value.length - 1] === '\'' ||
-                value[0] === '"' && value[value.length - 1] === '"') {
-                value = value.substring(1, value.length - 1);
-            }
-            attributes[key] = value;
-        }
-    }
-    // merge
-    attributes = mergeMap(attributes, nextAttr);
-
-    if (attributes.style) {
-        attributes.style = getStyleString(attributes.style);
-    }
-
-    // TODO presudo
-    /*
-    if (attributes.presudo) {
-        for (let name in attributes.presudo) {
-            attributes.presudo[name] = getStyleString(attributes.presudo[name]);
-        }
-    }
-   */
-
-    return attributes;
-};
-
-let getStyleString = (attr = '') => {
-    if (isString(attr)) {
-        return attr;
-    }
-
-    if (!isObject(attr)) {
-        throw new TypeError(`Expect object for style object, but got ${attr}`);
-    }
-    let style = '';
-    for (let key in attr) {
-        let value = attr[key];
-        key = convertStyleKey(key);
-        value = convertStyleValue(value, key);
-        style = `${style};${key}: ${value}`;
-    }
-    return style;
-};
-
-let convertStyleKey = (key) => {
-    return key.replace(/[A-Z]/, (letter) => {
-        return `-${letter.toLowerCase()}`;
-    });
-};
-
-let convertStyleValue = (value, key) => {
-    if (typeof value === 'number' && key !== 'z-index') {
-        return value + 'px';
-    }
-    if (key === 'padding' || key === 'margin') {
-        let parts = value.split(' ');
-        for (let i = 0; i < parts.length; i++) {
-            let part = parts[i];
-            if (!isNaN(Number(part))) {
-                parts[i] = part + 'px';
-            }
-        }
-
-        value = parts.join(' ');
-    }
-    return value;
-};
-
-module.exports = parseAttribute;
-
-
-/***/ }),
-/* 73 */
+/* 69 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6069,7 +5726,7 @@ module.exports = shadowFrame;
 
 
 /***/ }),
-/* 74 */
+/* 70 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6125,14 +5782,14 @@ module.exports = startMomenter;
 
 
 /***/ }),
-/* 75 */
+/* 71 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(76);
+module.exports = __webpack_require__(72);
 
 
 /***/ }),
-/* 76 */
+/* 72 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6183,7 +5840,7 @@ let repeatLetter = (letter, len) => {
 
 
 /***/ }),
-/* 77 */
+/* 73 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6193,11 +5850,11 @@ let {
     isObject, funType, or, isString, isFalsy, likeArray
 } = __webpack_require__(0);
 
-let iterate = __webpack_require__(23);
+let iterate = __webpack_require__(24);
 
 let {
     map, reduce, find, findIndex, forEach, filter, any, exist, compact
-} = __webpack_require__(78);
+} = __webpack_require__(74);
 
 let contain = (list, item, fopts) => findIndex(list, item, fopts) !== -1;
 
@@ -6293,13 +5950,13 @@ module.exports = {
 
 
 /***/ }),
-/* 78 */
+/* 74 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let iterate = __webpack_require__(23);
+let iterate = __webpack_require__(24);
 
 let defauls = {
     eq: (v1, v2) => v1 === v2
@@ -6398,7 +6055,7 @@ module.exports = {
 
 
 /***/ }),
-/* 79 */
+/* 75 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6465,7 +6122,7 @@ const id = v => v;
 
 
 /***/ }),
-/* 80 */
+/* 76 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6473,9 +6130,9 @@ const id = v => v;
 
 let {
     n
-} = __webpack_require__(27);
+} = __webpack_require__(28);
 
-let line = __webpack_require__(25);
+let line = __webpack_require__(26);
 
 module.exports = ({
     width,
@@ -6523,13 +6180,13 @@ module.exports = ({
 
 
 /***/ }),
-/* 81 */
+/* 77 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let iterate = __webpack_require__(26);
+let iterate = __webpack_require__(27);
 
 let defauls = {
     eq: (v1, v2) => v1 === v2
@@ -6628,7 +6285,7 @@ module.exports = {
 
 
 /***/ }),
-/* 82 */
+/* 78 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6636,7 +6293,7 @@ module.exports = {
 
 let {
     n
-} = __webpack_require__(29);
+} = __webpack_require__(30);
 
 let {
     isArray, isFunction, isObject
@@ -6684,7 +6341,7 @@ module.exports = (...args) => {
 
 
 /***/ }),
-/* 83 */
+/* 79 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6787,7 +6444,7 @@ let getGlobalEventTypeId = (type) => `__event_type_id_${type}`;
 
 
 /***/ }),
-/* 84 */
+/* 80 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6795,19 +6452,19 @@ let getGlobalEventTypeId = (type) => `__event_type_id_${type}`;
 
 let {
     n, svgn, bindPlugs
-} = __webpack_require__(29);
+} = __webpack_require__(30);
 
 let {
     parseArgs
-} = __webpack_require__(30);
+} = __webpack_require__(12);
 
-let plugs = __webpack_require__(87);
+let plugs = __webpack_require__(83);
 
-let view = __webpack_require__(91);
+let view = __webpack_require__(87);
 
-let mount = __webpack_require__(85);
+let mount = __webpack_require__(81);
 
-let N = __webpack_require__(82);
+let N = __webpack_require__(78);
 
 module.exports = {
     n,
@@ -6823,7 +6480,7 @@ module.exports = {
 
 
 /***/ }),
-/* 85 */
+/* 81 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6831,7 +6488,7 @@ module.exports = {
 
 let {
     attachDocument
-} = __webpack_require__(28);
+} = __webpack_require__(29);
 
 let {
     isNode
@@ -6866,7 +6523,7 @@ let getDoc = (node) => {
 
 
 /***/ }),
-/* 86 */
+/* 82 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6898,14 +6555,14 @@ let wrapEventHandler = (fun, catcher) => {
 
 
 /***/ }),
-/* 87 */
+/* 83 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let twowaybinding = __webpack_require__(88);
-let eventError = __webpack_require__(86);
+let twowaybinding = __webpack_require__(84);
+let eventError = __webpack_require__(82);
 
 module.exports = {
     twowaybinding,
@@ -6914,7 +6571,7 @@ module.exports = {
 
 
 /***/ }),
-/* 88 */
+/* 84 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6941,7 +6598,7 @@ module.exports = (obj, path) => (tagName, attributes, childExp) => {
 
 
 /***/ }),
-/* 89 */
+/* 85 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6988,7 +6645,7 @@ module.exports = applyAttibutes;
 
 
 /***/ }),
-/* 90 */
+/* 86 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7006,7 +6663,7 @@ let {
     forEach
 } = __webpack_require__(7);
 
-let applyAttibutes = __webpack_require__(89);
+let applyAttibutes = __webpack_require__(85);
 
 let replaceDirectly = (node, newNode) => {
     let parent = node.parentNode;
@@ -7120,7 +6777,7 @@ module.exports = (node, newNode) => {
 
 
 /***/ }),
-/* 91 */
+/* 87 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7138,7 +6795,7 @@ let {
     forEach
 } = __webpack_require__(7);
 
-let replace = __webpack_require__(90);
+let replace = __webpack_require__(86);
 
 /**
  * render function: (data) => node
@@ -7326,470 +6983,7 @@ module.exports = View;
 
 
 /***/ }),
-/* 92 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-let {
-    isObject, funType, or, isString, isFalsy, likeArray
-} = __webpack_require__(0);
-
-let iterate = __webpack_require__(31);
-
-let {
-    map, reduce, find, findIndex, forEach, filter, any, exist, compact
-} = __webpack_require__(93);
-
-let contain = (list, item, fopts) => findIndex(list, item, fopts) !== -1;
-
-let difference = (list1, list2, fopts) => {
-    return reduce(list1, (prev, item) => {
-        if (!contain(list2, item, fopts) &&
-            !contain(prev, item, fopts)) {
-            prev.push(item);
-        }
-        return prev;
-    }, []);
-};
-
-let union = (list1, list2, fopts) => deRepeat(list2, fopts, deRepeat(list1, fopts));
-
-let mergeMap = (map1 = {}, map2 = {}) => reduce(map2, setValueKey, reduce(map1, setValueKey, {}));
-
-let setValueKey = (obj, value, key) => {
-    obj[key] = value;
-    return obj;
-};
-
-let interset = (list1, list2, fopts) => {
-    return reduce(list1, (prev, cur) => {
-        if (contain(list2, cur, fopts)) {
-            prev.push(cur);
-        }
-        return prev;
-    }, []);
-};
-
-let deRepeat = (list, fopts, init = []) => {
-    return reduce(list, (prev, cur) => {
-        if (!contain(prev, cur, fopts)) {
-            prev.push(cur);
-        }
-        return prev;
-    }, init);
-};
-
-/**
- * a.b.c
- */
-let get = funType((sandbox, name = '') => {
-    name = name.trim();
-    let parts = !name ? [] : name.split('.');
-    return reduce(parts, getValue, sandbox, invertLogic);
-}, [
-    isObject,
-    or(isString, isFalsy)
-]);
-
-let getValue = (obj, key) => obj[key];
-
-let invertLogic = v => !v;
-
-let delay = (time) => new Promise((resolve) => {
-    setTimeout(resolve, time);
-});
-
-let flat = (list) => {
-    if (likeArray(list) && !isString(list)) {
-        return reduce(list, (prev, item) => {
-            prev = prev.concat(flat(item));
-            return prev;
-        }, []);
-    } else {
-        return [list];
-    }
-};
-
-module.exports = {
-    flat,
-    contain,
-    difference,
-    union,
-    interset,
-    map,
-    reduce,
-    iterate,
-    find,
-    findIndex,
-    deRepeat,
-    forEach,
-    filter,
-    any,
-    exist,
-    get,
-    delay,
-    mergeMap,
-    compact
-};
-
-
-/***/ }),
-/* 93 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-let iterate = __webpack_require__(31);
-
-let defauls = {
-    eq: (v1, v2) => v1 === v2
-};
-
-let setDefault = (opts, defauls) => {
-    for (let name in defauls) {
-        opts[name] = opts[name] || defauls[name];
-    }
-};
-
-let forEach = (list, handler) => iterate(list, {
-    limit: (rets) => {
-        if (rets === true) return true;
-        return false;
-    },
-    transfer: handler,
-    output: (prev, cur) => cur,
-    def: false
-});
-
-let map = (list, handler, limit) => iterate(list, {
-    transfer: handler,
-    def: [],
-    limit
-});
-
-let reduce = (list, handler, def, limit) => iterate(list, {
-    output: handler,
-    def,
-    limit
-});
-
-let filter = (list, handler, limit) => reduce(list, (prev, cur, index, list) => {
-    handler && handler(cur, index, list) && prev.push(cur);
-    return prev;
-}, [], limit);
-
-let find = (list, item, fopts) => {
-    let index = findIndex(list, item, fopts);
-    if (index === -1) return undefined;
-    return list[index];
-};
-
-let any = (list, handler) => reduce(list, (prev, cur, index, list) => {
-    let curLogic = handler && handler(cur, index, list);
-    return prev && originLogic(curLogic);
-}, true, falsyIt);
-
-let exist = (list, handler) => reduce(list, (prev, cur, index, list) => {
-    let curLogic = handler && handler(cur, index, list);
-    return prev || originLogic(curLogic);
-}, false, originLogic);
-
-let findIndex = (list, item, fopts = {}) => {
-    setDefault(fopts, defauls);
-
-    let {
-        eq
-    } = fopts;
-    let predicate = (v) => eq(item, v);
-    let ret = iterate(list, {
-        transfer: indexTransfer,
-        limit: onlyOne,
-        predicate,
-        def: []
-    });
-    if (!ret.length) return -1;
-    return ret[0];
-};
-
-let compact = (list) => reduce(list, (prev, cur) => {
-    if (cur) prev.push(cur);
-    return prev;
-}, []);
-
-let indexTransfer = (item, index) => index;
-
-let onlyOne = (rets, item, name, domain, count) => count >= 1;
-
-let falsyIt = v => !v;
-
-let originLogic = v => !!v;
-
-module.exports = {
-    map,
-    forEach,
-    reduce,
-    find,
-    findIndex,
-    filter,
-    any,
-    exist,
-    compact
-};
-
-
-/***/ }),
-/* 94 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-let {
-    isString, isObject, isNode, likeArray, isNumber, isBool
-} = __webpack_require__(0);
-
-let parseAttribute = __webpack_require__(95);
-
-const svgNS = 'http://www.w3.org/2000/svg';
-
-let cn = (create) => {
-    let nodeGen = nodeGener(create);
-    return (...args) => {
-        let {
-            tagName, attributes, childs
-        } = parseArgs(args);
-        return nodeGen(tagName, attributes, childs);
-    };
-};
-
-let nodeGener = (create) => (tagName, attributes, childs) => {
-    let node = create(tagName);
-    applyNode(node, attributes, childs);
-
-    return node;
-};
-
-let parseArgs = (args) => {
-    let tagName,
-        attributes = {},
-        childExp = [];
-
-    let first = args.shift();
-
-    let parts = splitTagNameAttribute(first);
-
-    if (parts.length > 1) { // not only tagName
-        tagName = parts[0];
-        attributes = parts[1];
-    } else {
-        tagName = first;
-    }
-
-    tagName = tagName.toLowerCase().trim();
-
-    let next = args.shift();
-
-    let nextAttr = {};
-
-    if (likeArray(next) ||
-        isString(next) ||
-        isNode(next) ||
-        isNumber(next) ||
-        isBool(next)) {
-        childExp = next;
-    } else if (isObject(next)) {
-        nextAttr = next;
-        childExp = args.shift() || [];
-    }
-
-    attributes = parseAttribute(attributes, nextAttr);
-
-    let childs = parseChildExp(childExp);
-
-    return {
-        tagName,
-        attributes,
-        childs
-    };
-};
-
-let splitTagNameAttribute = (str = '') => {
-    let tagName = str.split(' ')[0];
-    let attr = str.substring(tagName.length);
-    attr = attr && attr.trim();
-    if (attr) {
-        return [tagName, attr];
-    } else {
-        return [tagName];
-    }
-};
-
-let applyNode = (node, attributes, childs) => {
-    setAttributes(node, attributes);
-    for (let i = 0; i < childs.length; i++) {
-        let child = childs[i];
-        if (isString(child)) {
-            node.textContent = child;
-        } else {
-            node.appendChild(child);
-        }
-    }
-};
-
-let setAttributes = (node, attributes) => {
-    for (let name in attributes) {
-        let attr = attributes[name];
-        node.setAttribute(name, attr);
-    }
-};
-
-let parseChildExp = (childExp) => {
-    let ret = [];
-    if (isNode(childExp)) {
-        ret.push(childExp);
-    } else if (likeArray(childExp)) {
-        for (let i = 0; i < childExp.length; i++) {
-            let child = childExp[i];
-            ret = ret.concat(parseChildExp(child));
-        }
-    } else if (childExp) {
-        ret.push(childExp.toString());
-    }
-    return ret;
-};
-
-let createElement = (tagName) => document.createElement(tagName);
-
-let createSvgElement = (tagName) => document.createElementNS(svgNS, tagName);
-
-module.exports = {
-    svgn: cn(createSvgElement),
-    n: cn(createElement),
-    parseArgs,
-    nodeGener,
-    createElement,
-    createSvgElement,
-    cn
-};
-
-
-/***/ }),
-/* 95 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-let {
-    isString, isObject
-} = __webpack_require__(0);
-
-let {
-    mergeMap
-} = __webpack_require__(92);
-
-const ITEM_REG = /([\w-]+)\s*=\s*(([\w-]+)|('.*?')|(".*?"))/;
-
-// TODO better key=value grammer
-// TODO refactor with grammerL: class grammer, id grammer, refer some popular grammer
-let parseAttribute = (attributes, nextAttr) => {
-    // key=value key=value
-    // value='abc' value=true value=123 value="def"
-    if (isString(attributes)) {
-        let str = attributes.trim(),
-            kvs = [];
-
-        let stop = false;
-        while (!stop) {
-            let newstr = str.replace(ITEM_REG, (matchStr, $1, $2) => {
-                kvs.push([$1, $2]);
-                return '';
-            }).trim();
-            if (newstr === str) {
-                stop = true;
-            }
-            str = newstr;
-        }
-
-        attributes = {};
-        for (let i = 0; i < kvs.length; i++) {
-            let [key, value] = kvs[i];
-            if (value[0] === '\'' && value[value.length - 1] === '\'' ||
-                value[0] === '"' && value[value.length - 1] === '"') {
-                value = value.substring(1, value.length - 1);
-            }
-            attributes[key] = value;
-        }
-    }
-    // merge
-    attributes = mergeMap(attributes, nextAttr);
-
-    if (attributes.style) {
-        attributes.style = getStyleString(attributes.style);
-    }
-
-    // TODO presudo
-    /*
-    if (attributes.presudo) {
-        for (let name in attributes.presudo) {
-            attributes.presudo[name] = getStyleString(attributes.presudo[name]);
-        }
-    }
-   */
-
-    return attributes;
-};
-
-let getStyleString = (attr = '') => {
-    if (isString(attr)) {
-        return attr;
-    }
-
-    if (!isObject(attr)) {
-        throw new TypeError(`Expect object for style object, but got ${attr}`);
-    }
-    let style = '';
-    for (let key in attr) {
-        let value = attr[key];
-        key = convertStyleKey(key);
-        value = convertStyleValue(value, key);
-        style = `${style};${key}: ${value}`;
-    }
-    return style;
-};
-
-let convertStyleKey = (key) => {
-    return key.replace(/[A-Z]/, (letter) => {
-        return `-${letter.toLowerCase()}`;
-    });
-};
-
-let convertStyleValue = (value, key) => {
-    if (typeof value === 'number' && key !== 'z-index') {
-        return value + 'px';
-    }
-    if (key === 'padding' || key === 'margin') {
-        let parts = value.split(' ');
-        for (let i = 0; i < parts.length; i++) {
-            let part = parts[i];
-            if (!isNaN(Number(part))) {
-                parts[i] = part + 'px';
-            }
-        }
-
-        value = parts.join(' ');
-    }
-    return value;
-};
-
-module.exports = parseAttribute;
-
-
-/***/ }),
-/* 96 */
+/* 88 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7799,7 +6993,7 @@ let {
     n
 } = __webpack_require__(1);
 
-let angle = __webpack_require__(58);
+let angle = __webpack_require__(56);
 
 module.exports = (ops) => {
     return n('span', {
@@ -7816,7 +7010,7 @@ module.exports = (ops) => {
 
 
 /***/ }),
-/* 97 */
+/* 89 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7826,11 +7020,11 @@ let {
     isObject, funType, or, isString, isFalsy, likeArray
 } = __webpack_require__(0);
 
-let iterate = __webpack_require__(34);
+let iterate = __webpack_require__(33);
 
 let {
     map, reduce, find, findIndex, forEach, filter, any, exist, compact
-} = __webpack_require__(98);
+} = __webpack_require__(90);
 
 let contain = (list, item, fopts) => findIndex(list, item, fopts) !== -1;
 
@@ -7926,13 +7120,13 @@ module.exports = {
 
 
 /***/ }),
-/* 98 */
+/* 90 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let iterate = __webpack_require__(34);
+let iterate = __webpack_require__(33);
 
 let defauls = {
     eq: (v1, v2) => v1 === v2
@@ -8031,7 +7225,7 @@ module.exports = {
 
 
 /***/ }),
-/* 99 */
+/* 91 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8083,15 +7277,15 @@ module.exports = ({
 
 
 /***/ }),
-/* 100 */
+/* 92 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let shadowFrame = __webpack_require__(101);
+let shadowFrame = __webpack_require__(93);
 
-let startMomenter = __webpack_require__(102);
+let startMomenter = __webpack_require__(94);
 
 let getX = (elem) => {
     var x = 0;
@@ -8188,7 +7382,7 @@ module.exports = {
 
 
 /***/ }),
-/* 101 */
+/* 93 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8243,7 +7437,7 @@ module.exports = shadowFrame;
 
 
 /***/ }),
-/* 102 */
+/* 94 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8295,7 +7489,7 @@ module.exports = startMomenter;
 
 
 /***/ }),
-/* 103 */
+/* 95 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8303,7 +7497,7 @@ module.exports = startMomenter;
 
 let {
     reduce
-} = __webpack_require__(104);
+} = __webpack_require__(96);
 let {
     funType, isObject, or, isString, isFalsy
 } = __webpack_require__(0);
@@ -8459,7 +7653,7 @@ module.exports = {
 
 
 /***/ }),
-/* 104 */
+/* 96 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8469,11 +7663,11 @@ let {
     isObject, funType, or, isString, isFalsy, likeArray
 } = __webpack_require__(0);
 
-let iterate = __webpack_require__(36);
+let iterate = __webpack_require__(35);
 
 let {
     map, reduce, find, findIndex, forEach, filter, any, exist, compact
-} = __webpack_require__(105);
+} = __webpack_require__(97);
 
 let contain = (list, item, fopts) => findIndex(list, item, fopts) !== -1;
 
@@ -8569,7 +7763,112 @@ module.exports = {
 
 
 /***/ }),
-/* 105 */
+/* 97 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let iterate = __webpack_require__(35);
+
+let defauls = {
+    eq: (v1, v2) => v1 === v2
+};
+
+let setDefault = (opts, defauls) => {
+    for (let name in defauls) {
+        opts[name] = opts[name] || defauls[name];
+    }
+};
+
+let forEach = (list, handler) => iterate(list, {
+    limit: (rets) => {
+        if (rets === true) return true;
+        return false;
+    },
+    transfer: handler,
+    output: (prev, cur) => cur,
+    def: false
+});
+
+let map = (list, handler, limit) => iterate(list, {
+    transfer: handler,
+    def: [],
+    limit
+});
+
+let reduce = (list, handler, def, limit) => iterate(list, {
+    output: handler,
+    def,
+    limit
+});
+
+let filter = (list, handler, limit) => reduce(list, (prev, cur, index, list) => {
+    handler && handler(cur, index, list) && prev.push(cur);
+    return prev;
+}, [], limit);
+
+let find = (list, item, fopts) => {
+    let index = findIndex(list, item, fopts);
+    if (index === -1) return undefined;
+    return list[index];
+};
+
+let any = (list, handler) => reduce(list, (prev, cur, index, list) => {
+    let curLogic = handler && handler(cur, index, list);
+    return prev && originLogic(curLogic);
+}, true, falsyIt);
+
+let exist = (list, handler) => reduce(list, (prev, cur, index, list) => {
+    let curLogic = handler && handler(cur, index, list);
+    return prev || originLogic(curLogic);
+}, false, originLogic);
+
+let findIndex = (list, item, fopts = {}) => {
+    setDefault(fopts, defauls);
+
+    let {
+        eq
+    } = fopts;
+    let predicate = (v) => eq(item, v);
+    let ret = iterate(list, {
+        transfer: indexTransfer,
+        limit: onlyOne,
+        predicate,
+        def: []
+    });
+    if (!ret.length) return -1;
+    return ret[0];
+};
+
+let compact = (list) => reduce(list, (prev, cur) => {
+    if (cur) prev.push(cur);
+    return prev;
+}, []);
+
+let indexTransfer = (item, index) => index;
+
+let onlyOne = (rets, item, name, domain, count) => count >= 1;
+
+let falsyIt = v => !v;
+
+let originLogic = v => !!v;
+
+module.exports = {
+    map,
+    forEach,
+    reduce,
+    find,
+    findIndex,
+    filter,
+    any,
+    exist,
+    compact
+};
+
+
+/***/ }),
+/* 98 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8674,112 +7973,7 @@ module.exports = {
 
 
 /***/ }),
-/* 106 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-let iterate = __webpack_require__(37);
-
-let defauls = {
-    eq: (v1, v2) => v1 === v2
-};
-
-let setDefault = (opts, defauls) => {
-    for (let name in defauls) {
-        opts[name] = opts[name] || defauls[name];
-    }
-};
-
-let forEach = (list, handler) => iterate(list, {
-    limit: (rets) => {
-        if (rets === true) return true;
-        return false;
-    },
-    transfer: handler,
-    output: (prev, cur) => cur,
-    def: false
-});
-
-let map = (list, handler, limit) => iterate(list, {
-    transfer: handler,
-    def: [],
-    limit
-});
-
-let reduce = (list, handler, def, limit) => iterate(list, {
-    output: handler,
-    def,
-    limit
-});
-
-let filter = (list, handler, limit) => reduce(list, (prev, cur, index, list) => {
-    handler && handler(cur, index, list) && prev.push(cur);
-    return prev;
-}, [], limit);
-
-let find = (list, item, fopts) => {
-    let index = findIndex(list, item, fopts);
-    if (index === -1) return undefined;
-    return list[index];
-};
-
-let any = (list, handler) => reduce(list, (prev, cur, index, list) => {
-    let curLogic = handler && handler(cur, index, list);
-    return prev && originLogic(curLogic);
-}, true, falsyIt);
-
-let exist = (list, handler) => reduce(list, (prev, cur, index, list) => {
-    let curLogic = handler && handler(cur, index, list);
-    return prev || originLogic(curLogic);
-}, false, originLogic);
-
-let findIndex = (list, item, fopts = {}) => {
-    setDefault(fopts, defauls);
-
-    let {
-        eq
-    } = fopts;
-    let predicate = (v) => eq(item, v);
-    let ret = iterate(list, {
-        transfer: indexTransfer,
-        limit: onlyOne,
-        predicate,
-        def: []
-    });
-    if (!ret.length) return -1;
-    return ret[0];
-};
-
-let compact = (list) => reduce(list, (prev, cur) => {
-    if (cur) prev.push(cur);
-    return prev;
-}, []);
-
-let indexTransfer = (item, index) => index;
-
-let onlyOne = (rets, item, name, domain, count) => count >= 1;
-
-let falsyIt = v => !v;
-
-let originLogic = v => !!v;
-
-module.exports = {
-    map,
-    forEach,
-    reduce,
-    find,
-    findIndex,
-    filter,
-    any,
-    exist,
-    compact
-};
-
-
-/***/ }),
-/* 107 */
+/* 99 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8787,7 +7981,7 @@ module.exports = {
 
 let {
     n
-} = __webpack_require__(12);
+} = __webpack_require__(14);
 
 let {
     isArray, isFunction, isObject
@@ -8795,7 +7989,7 @@ let {
 
 let {
     map
-} = __webpack_require__(6);
+} = __webpack_require__(5);
 
 module.exports = (...args) => {
     let tagName = args[0],
@@ -8835,7 +8029,7 @@ module.exports = (...args) => {
 
 
 /***/ }),
-/* 108 */
+/* 100 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8843,7 +8037,7 @@ module.exports = (...args) => {
 
 let {
     contain
-} = __webpack_require__(6);
+} = __webpack_require__(5);
 
 module.exports = () => {
     let docs = [];
@@ -8938,27 +8132,25 @@ let getGlobalEventTypeId = (type) => `__event_type_id_${type}`;
 
 
 /***/ }),
-/* 109 */
+/* 101 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 let {
-    n, svgn, bindPlugs, toHTML, reduceNode
-} = __webpack_require__(12);
+    n, svgn, bindPlugs, toHTML, parseArgs
+} = __webpack_require__(14);
 
-let {
-    parseArgs
-} = __webpack_require__(41);
+let plugs = __webpack_require__(107);
 
-let plugs = __webpack_require__(112);
+let view = __webpack_require__(111);
 
-let view = __webpack_require__(116);
+let mount = __webpack_require__(102);
 
-let mount = __webpack_require__(110);
+let N = __webpack_require__(99);
 
-let N = __webpack_require__(107);
+let reduceNode = __webpack_require__(15);
 
 module.exports = {
     n,
@@ -8976,7 +8168,7 @@ module.exports = {
 
 
 /***/ }),
-/* 110 */
+/* 102 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8984,7 +8176,7 @@ module.exports = {
 
 let {
     attachDocument
-} = __webpack_require__(38);
+} = __webpack_require__(37);
 
 let {
     isNode
@@ -8992,11 +8184,9 @@ let {
 
 let {
     flat, forEach
-} = __webpack_require__(6);
+} = __webpack_require__(5);
 
-let {
-    reduceNode
-} = __webpack_require__(12);
+let reduceNode = __webpack_require__(15);
 
 /**
  * @param parentNode
@@ -9025,7 +8215,254 @@ let getDoc = (node) => {
 
 
 /***/ }),
-/* 111 */
+/* 103 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let parseAttribute = __webpack_require__(104);
+
+let {
+    isString, isObject, isNode, likeArray, isNumber, isBool
+} = __webpack_require__(0);
+
+let parseArgs = (args) => {
+    let tagName,
+        attributes = {},
+        childExp = [];
+
+    let first = args.shift();
+
+    let parts = splitTagNameAttribute(first);
+
+    if (parts.length > 1) { // not only tagName
+        tagName = parts[0];
+        attributes = parts[1];
+    } else {
+        tagName = first;
+    }
+
+    tagName = tagName.toLowerCase().trim();
+
+    let next = args.shift();
+
+    let nextAttr = {};
+
+    if (likeArray(next) ||
+        isString(next) ||
+        isNode(next) ||
+        isNumber(next) ||
+        isBool(next)) {
+        childExp = next;
+    } else if (isObject(next)) {
+        nextAttr = next;
+        childExp = args.shift() || [];
+    }
+
+    attributes = parseAttribute(attributes, nextAttr);
+
+    let childs = parseChildExp(childExp);
+
+    return {
+        tagName,
+        attributes,
+        childs
+    };
+};
+
+let splitTagNameAttribute = (str = '') => {
+    let tagName = str.split(' ')[0];
+    let attr = str.substring(tagName.length);
+    attr = attr && attr.trim();
+    if (attr) {
+        return [tagName, attr];
+    } else {
+        return [tagName];
+    }
+};
+
+let parseChildExp = (childExp) => {
+    let ret = [];
+    if (isNode(childExp)) {
+        ret.push(childExp);
+    } else if (likeArray(childExp)) {
+        for (let i = 0; i < childExp.length; i++) {
+            let child = childExp[i];
+            ret = ret.concat(parseChildExp(child));
+        }
+    } else if (childExp !== null &&
+        childExp !== undefined &&
+        childExp !== false) {
+        ret.push(childExp);
+    }
+    return ret;
+};
+
+module.exports = parseArgs;
+
+
+/***/ }),
+/* 104 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    isString, isObject
+} = __webpack_require__(0);
+
+let {
+    mergeMap
+} = __webpack_require__(5);
+
+const ITEM_REG = /([\w-]+)\s*=\s*(([\w-]+)|('.*?')|(".*?"))/;
+
+// TODO better key=value grammer
+// TODO refactor with grammerL: class grammer, id grammer, refer some popular grammer
+let parseAttribute = (attributes, nextAttr) => {
+    // key=value key=value
+    // value='abc' value=true value=123 value="def"
+    if (isString(attributes)) {
+        let str = attributes.trim(),
+            kvs = [];
+
+        let stop = false;
+        while (!stop) {
+            let newstr = str.replace(ITEM_REG, (matchStr, $1, $2) => {
+                kvs.push([$1, $2]);
+                return '';
+            }).trim();
+            if (newstr === str) {
+                stop = true;
+            }
+            str = newstr;
+        }
+
+        attributes = {};
+        for (let i = 0; i < kvs.length; i++) {
+            let [key, value] = kvs[i];
+            if (value[0] === '\'' && value[value.length - 1] === '\'' ||
+                value[0] === '"' && value[value.length - 1] === '"') {
+                value = value.substring(1, value.length - 1);
+            }
+            attributes[key] = value;
+        }
+    }
+    // merge
+    attributes = mergeMap(attributes, nextAttr);
+
+    if (attributes.style) {
+        attributes.style = getStyleString(attributes.style);
+    }
+
+    // TODO presudo
+    /*
+    if (attributes.presudo) {
+        for (let name in attributes.presudo) {
+            attributes.presudo[name] = getStyleString(attributes.presudo[name]);
+        }
+    }
+   */
+
+    return attributes;
+};
+
+let getStyleString = (attr = '') => {
+    if (isString(attr)) {
+        return attr;
+    }
+
+    if (!isObject(attr)) {
+        throw new TypeError(`Expect object for style object, but got ${attr}`);
+    }
+    let styles = [];
+    for (let key in attr) {
+        let value = attr[key];
+        key = convertStyleKey(key);
+        value = convertStyleValue(value, key);
+        styles.push(`${key}: ${value}`);
+    }
+    return styles.join(';');
+};
+
+let convertStyleKey = (key) => {
+    return key.replace(/[A-Z]/, (letter) => {
+        return `-${letter.toLowerCase()}`;
+    });
+};
+
+let convertStyleValue = (value, key) => {
+    if (typeof value === 'number' && key !== 'z-index') {
+        return value + 'px';
+    }
+    if (key === 'padding' || key === 'margin') {
+        let parts = value.split(' ');
+        for (let i = 0; i < parts.length; i++) {
+            let part = parts[i];
+            if (!isNaN(Number(part))) {
+                parts[i] = part + 'px';
+            }
+        }
+
+        value = parts.join(' ');
+    }
+    return value;
+};
+
+module.exports = parseAttribute;
+
+
+/***/ }),
+/* 105 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+let {
+    isNode
+} = __webpack_require__(0);
+
+const svgNS = 'http://www.w3.org/2000/svg';
+
+let applyNode = (node, attributes, childs) => {
+    for (let name in attributes) {
+        let attr = attributes[name];
+        node.setAttribute(name, attr);
+    }
+
+    for (let i = 0; i < childs.length; i++) {
+        let child = childs[i];
+        if (isNode(child)) {
+            node.appendChild(child);
+        } else {
+            node.textContent = child + '';
+        }
+    }
+};
+
+let createElement = (tagName, attributes, childs) => {
+    let node = document.createElement(tagName);
+    applyNode(node, attributes, childs);
+    return node;
+};
+
+let createSvgElement = (tagName, attributes, childs) => {
+    let node = document.createElementNS(svgNS, tagName);
+    applyNode(node, attributes, childs);
+    return node;
+};
+
+module.exports = {
+    createElement,
+    createSvgElement
+};
+
+
+/***/ }),
+/* 106 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9057,14 +8494,14 @@ let wrapEventHandler = (fun, catcher) => {
 
 
 /***/ }),
-/* 112 */
+/* 107 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let twowaybinding = __webpack_require__(113);
-let eventError = __webpack_require__(111);
+let twowaybinding = __webpack_require__(108);
+let eventError = __webpack_require__(106);
 
 module.exports = {
     twowaybinding,
@@ -9073,7 +8510,7 @@ module.exports = {
 
 
 /***/ }),
-/* 113 */
+/* 108 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9100,7 +8537,7 @@ module.exports = (obj, path) => (tagName, attributes, childExp) => {
 
 
 /***/ }),
-/* 114 */
+/* 109 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9116,7 +8553,7 @@ let {
 
 let {
     forEach
-} = __webpack_require__(6);
+} = __webpack_require__(5);
 
 let applyAttibutes = (node, newNode) => {
     // attributes
@@ -9147,7 +8584,7 @@ module.exports = applyAttibutes;
 
 
 /***/ }),
-/* 115 */
+/* 110 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9163,9 +8600,9 @@ let {
 
 let {
     forEach
-} = __webpack_require__(6);
+} = __webpack_require__(5);
 
-let applyAttibutes = __webpack_require__(114);
+let applyAttibutes = __webpack_require__(109);
 
 let replaceDirectly = (node, newNode) => {
     let parent = node.parentNode;
@@ -9279,7 +8716,7 @@ module.exports = (node, newNode) => {
 
 
 /***/ }),
-/* 116 */
+/* 111 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9295,13 +8732,11 @@ let {
 
 let {
     forEach
-} = __webpack_require__(6);
+} = __webpack_require__(5);
 
-let replace = __webpack_require__(115);
+let replace = __webpack_require__(110);
 
-let {
-    reduceNode
-} = __webpack_require__(12);
+let reduceNode = __webpack_require__(15);
 
 /**
  * render function: (data) => node
@@ -9490,7 +8925,7 @@ module.exports = View;
 
 
 /***/ }),
-/* 117 */
+/* 112 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9516,7 +8951,7 @@ module.exports = PassPredicateUI;
 
 
 /***/ }),
-/* 118 */
+/* 113 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9573,13 +9008,13 @@ module.exports = form;
 
 
 /***/ }),
-/* 119 */
+/* 114 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let InputList = __webpack_require__(24);
+let InputList = __webpack_require__(25);
 
 let {
     JSON_DATA
@@ -9637,14 +9072,14 @@ module.exports = simpleList;
 
 
 /***/ }),
-/* 120 */
+/* 115 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(124);
+module.exports = __webpack_require__(119);
 
 
 /***/ }),
-/* 121 */
+/* 116 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9698,7 +9133,7 @@ module.exports = ({
 
 
 /***/ }),
-/* 122 */
+/* 117 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9816,21 +9251,21 @@ module.exports = {
 
 
 /***/ }),
-/* 123 */
+/* 118 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let EmptyExpressionView = __webpack_require__(126);
+let EmptyExpressionView = __webpack_require__(121);
 
-let JsonDataView = __webpack_require__(127);
+let JsonDataView = __webpack_require__(122);
 
-let AbstractionView = __webpack_require__(125);
+let AbstractionView = __webpack_require__(120);
 
-let PredicateView = __webpack_require__(128);
+let PredicateView = __webpack_require__(123);
 
-let VariableView = __webpack_require__(129);
+let VariableView = __webpack_require__(124);
 
 let {
     getExpressionType,
@@ -9894,13 +9329,13 @@ module.exports = ({
 
 
 /***/ }),
-/* 124 */
+/* 119 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let LetaUIView = __webpack_require__(130);
+let LetaUIView = __webpack_require__(125);
 
 let {
     runner, getLambdaUiValue
@@ -9908,13 +9343,13 @@ let {
 
 let {
     dsl
-} = __webpack_require__(14);
+} = __webpack_require__(16);
 
 let {
     mergeMap
 } = __webpack_require__(2);
 
-let meta = __webpack_require__(135);
+let meta = __webpack_require__(130);
 
 let {
     getJson, method, v, r
@@ -9978,7 +9413,7 @@ module.exports = {
 
 
 /***/ }),
-/* 125 */
+/* 120 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9988,7 +9423,7 @@ let {
     n, view
 } = __webpack_require__(1);
 
-let VariableDeclareView = __webpack_require__(144);
+let VariableDeclareView = __webpack_require__(139);
 
 let expandorWrapper = __webpack_require__(11);
 
@@ -10050,7 +9485,7 @@ module.exports = view(({
 
 
 /***/ }),
-/* 126 */
+/* 121 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10067,7 +9502,7 @@ module.exports = ({
 
 
 /***/ }),
-/* 127 */
+/* 122 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10081,15 +9516,15 @@ let {
     contain
 } = __webpack_require__(2);
 
-let fold = __webpack_require__(32);
+let fold = __webpack_require__(31);
 
-let foldArrow = __webpack_require__(96);
+let foldArrow = __webpack_require__(88);
 
 let {
     isObject
 } = __webpack_require__(0);
 
-let InputView = __webpack_require__(138);
+let InputView = __webpack_require__(133);
 
 let expandorWrapper = __webpack_require__(11);
 
@@ -10179,7 +9614,7 @@ const id = v => v;
 
 
 /***/ }),
-/* 128 */
+/* 123 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10234,7 +9669,7 @@ let arrangeItems = (itemViews) => n('div', {
 
 
 /***/ }),
-/* 129 */
+/* 124 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10254,7 +9689,7 @@ module.exports = view(({
 
 
 /***/ }),
-/* 130 */
+/* 125 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10264,25 +9699,25 @@ let {
     view, n
 } = __webpack_require__(1);
 
-let ExpandorComponent = __webpack_require__(121);
+let ExpandorComponent = __webpack_require__(116);
 
-let TreeOptionView = __webpack_require__(143);
+let TreeOptionView = __webpack_require__(138);
 
-let Expandor = __webpack_require__(136);
+let Expandor = __webpack_require__(131);
 
 let {
     getPrefixParamser,
     getSuffixParamser,
     getParamer
-} = __webpack_require__(122);
+} = __webpack_require__(117);
 
 let {
     mergeMap, get, map
 } = __webpack_require__(2);
 
-let getExpressionViewer = __webpack_require__(123);
+let getExpressionViewer = __webpack_require__(118);
 
-const style = __webpack_require__(134);
+const style = __webpack_require__(129);
 
 let {
     JSON_DATA,
@@ -10588,7 +10023,7 @@ let getExpressionViewOptions = (data, update) => {
 
 
 /***/ }),
-/* 131 */
+/* 126 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10596,7 +10031,7 @@ let getExpressionViewOptions = (data, update) => {
 
 let {
     dsl
-} = __webpack_require__(14);
+} = __webpack_require__(16);
 
 let {
     destruct,
@@ -10704,13 +10139,13 @@ module.exports = getLambdaUiValue;
 
 
 /***/ }),
-/* 132 */
+/* 127 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let formStyle = __webpack_require__(133);
+let formStyle = __webpack_require__(128);
 
 module.exports = `
 .lambda-ui {
@@ -10756,7 +10191,7 @@ module.exports = `
 
 
 /***/ }),
-/* 133 */
+/* 128 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10856,13 +10291,13 @@ module.exports = `
 
 
 /***/ }),
-/* 134 */
+/* 129 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const LAMBDA_STYLE = __webpack_require__(132);
+const LAMBDA_STYLE = __webpack_require__(127);
 
 let {
     n, mount
@@ -10880,7 +10315,7 @@ module.exports = ({
 
 
 /***/ }),
-/* 135 */
+/* 130 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10906,7 +10341,7 @@ module.exports = funType((fun, meta) => {
 
 
 /***/ }),
-/* 136 */
+/* 131 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10916,11 +10351,11 @@ let {
     view, n
 } = __webpack_require__(1);
 
-let fold = __webpack_require__(32);
+let fold = __webpack_require__(31);
 
-let triangle = __webpack_require__(17);
+let triangle = __webpack_require__(19);
 
-let TreeSelect = __webpack_require__(35);
+let TreeSelect = __webpack_require__(34);
 
 let {
     mergeMap
@@ -10998,7 +10433,7 @@ module.exports = view(({
 
 
 /***/ }),
-/* 137 */
+/* 132 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11008,7 +10443,7 @@ let {
     view
 } = __webpack_require__(1);
 
-let SelectView = __webpack_require__(33);
+let SelectView = __webpack_require__(32);
 
 module.exports = view((data) => {
     let {
@@ -11035,21 +10470,21 @@ module.exports = view((data) => {
 
 
 /***/ }),
-/* 138 */
+/* 133 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let boolInput = __webpack_require__(137);
+let boolInput = __webpack_require__(132);
 
-let numberInput = __webpack_require__(141);
+let numberInput = __webpack_require__(136);
 
-let textInput = __webpack_require__(142);
+let textInput = __webpack_require__(137);
 
-let jsonCodeInput = __webpack_require__(139);
+let jsonCodeInput = __webpack_require__(134);
 
-let nullInput = __webpack_require__(140);
+let nullInput = __webpack_require__(135);
 
 let {
     NUMBER, BOOLEAN, STRING, JSON_TYPE, NULL
@@ -11071,7 +10506,7 @@ module.exports = (data, type) => {
 
 
 /***/ }),
-/* 139 */
+/* 134 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11112,7 +10547,7 @@ module.exports = view((data) => {
 
 
 /***/ }),
-/* 140 */
+/* 135 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11128,7 +10563,7 @@ module.exports = () => {
 
 
 /***/ }),
-/* 141 */
+/* 136 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11160,7 +10595,7 @@ module.exports = view((data) => {
 
 
 /***/ }),
-/* 142 */
+/* 137 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11194,7 +10629,7 @@ module.exports = view((data) => {
 
 
 /***/ }),
-/* 143 */
+/* 138 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11212,9 +10647,9 @@ let {
     isFunction
 } = __webpack_require__(0);
 
-let TreeSelect = __webpack_require__(35);
+let TreeSelect = __webpack_require__(34);
 
-let triangle = __webpack_require__(17);
+let triangle = __webpack_require__(19);
 
 let {
     PREDICATE, VARIABLE
@@ -11338,7 +10773,7 @@ let renderGuideLine = (path) => {
 
 
 /***/ }),
-/* 144 */
+/* 139 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11348,7 +10783,7 @@ let {
     n, view
 } = __webpack_require__(1);
 
-let InputList = __webpack_require__(24);
+let InputList = __webpack_require__(25);
 
 let {
     reduce, map
@@ -11392,7 +10827,7 @@ module.exports = view((data) => {
 
 
 /***/ }),
-/* 145 */
+/* 140 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11400,7 +10835,7 @@ module.exports = view((data) => {
 
 let {
     reduce
-} = __webpack_require__(146);
+} = __webpack_require__(141);
 let {
     funType, isObject, or, isString, isFalsy
 } = __webpack_require__(0);
@@ -11556,7 +10991,7 @@ module.exports = {
 
 
 /***/ }),
-/* 146 */
+/* 141 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11566,11 +11001,11 @@ let {
     isObject, funType, or, isString, isFalsy, likeArray
 } = __webpack_require__(0);
 
-let iterate = __webpack_require__(39);
+let iterate = __webpack_require__(38);
 
 let {
     map, reduce, find, findIndex, forEach, filter, any, exist, compact
-} = __webpack_require__(147);
+} = __webpack_require__(142);
 
 let contain = (list, item, fopts) => findIndex(list, item, fopts) !== -1;
 
@@ -11666,13 +11101,13 @@ module.exports = {
 
 
 /***/ }),
-/* 147 */
+/* 142 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let iterate = __webpack_require__(39);
+let iterate = __webpack_require__(38);
 
 let defauls = {
     eq: (v1, v2) => v1 === v2
@@ -11771,7 +11206,7 @@ module.exports = {
 
 
 /***/ }),
-/* 148 */
+/* 143 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11787,7 +11222,7 @@ let {
 
 let {
     hasOwnProperty, get
-} = __webpack_require__(145);
+} = __webpack_require__(140);
 
 let {
     APPLICATION_PREFIX,
@@ -11798,7 +11233,7 @@ let {
     ABSTRACTION_PREFIX,
 
     destruct
-} = __webpack_require__(40);
+} = __webpack_require__(39);
 
 /**
  * used to interpret lambda json
@@ -11914,7 +11349,7 @@ module.exports = (predicateSet) => {
 
 
 /***/ }),
-/* 149 */
+/* 144 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11924,11 +11359,11 @@ let {
     isObject, funType, or, isString, isFalsy, likeArray
 } = __webpack_require__(0);
 
-let iterate = __webpack_require__(42);
+let iterate = __webpack_require__(40);
 
 let {
     map, reduce, find, findIndex, forEach, filter, any, exist, compact
-} = __webpack_require__(150);
+} = __webpack_require__(145);
 
 let contain = (list, item, fopts) => findIndex(list, item, fopts) !== -1;
 
@@ -12024,13 +11459,13 @@ module.exports = {
 
 
 /***/ }),
-/* 150 */
+/* 145 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let iterate = __webpack_require__(42);
+let iterate = __webpack_require__(40);
 
 let defauls = {
     eq: (v1, v2) => v1 === v2
@@ -12129,7 +11564,7 @@ module.exports = {
 
 
 /***/ }),
-/* 151 */
+/* 146 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12139,7 +11574,7 @@ let {
     isString, isObject, isNode, likeArray, isNumber, isBool
 } = __webpack_require__(0);
 
-let parseAttribute = __webpack_require__(152);
+let parseAttribute = __webpack_require__(147);
 
 const svgNS = 'http://www.w3.org/2000/svg';
 
@@ -12219,10 +11654,10 @@ let applyNode = (node, attributes, childs) => {
     setAttributes(node, attributes);
     for (let i = 0; i < childs.length; i++) {
         let child = childs[i];
-        if (isNode(child)) {
-            node.appendChild(child);
+        if (isString(child)) {
+            node.textContent = child;
         } else {
-            node.textContent = child + '';
+            node.appendChild(child);
         }
     }
 };
@@ -12243,10 +11678,8 @@ let parseChildExp = (childExp) => {
             let child = childExp[i];
             ret = ret.concat(parseChildExp(child));
         }
-    } else if (childExp !== null &&
-        childExp !== undefined &&
-        childExp !== false) {
-        ret.push(childExp);
+    } else if (childExp) {
+        ret.push(childExp.toString());
     }
     return ret;
 };
@@ -12267,7 +11700,7 @@ module.exports = {
 
 
 /***/ }),
-/* 152 */
+/* 147 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12279,7 +11712,7 @@ let {
 
 let {
     mergeMap
-} = __webpack_require__(149);
+} = __webpack_require__(144);
 
 const ITEM_REG = /([\w-]+)\s*=\s*(([\w-]+)|('.*?')|(".*?"))/;
 
@@ -12341,14 +11774,14 @@ let getStyleString = (attr = '') => {
     if (!isObject(attr)) {
         throw new TypeError(`Expect object for style object, but got ${attr}`);
     }
-    let styles = [];
+    let style = '';
     for (let key in attr) {
         let value = attr[key];
         key = convertStyleKey(key);
         value = convertStyleValue(value, key);
-        styles.push(`${key}: ${value}`);
+        style = `${style};${key}: ${value}`;
     }
-    return styles.join(';');
+    return style;
 };
 
 let convertStyleKey = (key) => {
@@ -12379,7 +11812,7 @@ module.exports = parseAttribute;
 
 
 /***/ }),
-/* 153 */
+/* 148 */
 /***/ (function(module, exports) {
 
 module.exports = function CMYK(color) {
@@ -12415,11 +11848,11 @@ module.exports = function CMYK(color) {
 
 
 /***/ }),
-/* 154 */
+/* 149 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = function LAB(color) {
-    color.use(__webpack_require__(44));
+    color.use(__webpack_require__(42));
 
     color.installColorSpace('LAB', ['l', 'a', 'b', 'alpha'], {
         fromRgb: function () {
@@ -12454,7 +11887,7 @@ module.exports = function LAB(color) {
 
 
 /***/ }),
-/* 155 */
+/* 150 */
 /***/ (function(module, exports) {
 
 var installedColorSpaces = [],
@@ -12714,7 +12147,7 @@ module.exports = color;
 
 
 /***/ }),
-/* 156 */
+/* 151 */
 /***/ (function(module, exports) {
 
 module.exports = function clearer(color) {
@@ -12725,7 +12158,7 @@ module.exports = function clearer(color) {
 
 
 /***/ }),
-/* 157 */
+/* 152 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = function darken(color) {
@@ -12738,7 +12171,7 @@ module.exports = function darken(color) {
 
 
 /***/ }),
-/* 158 */
+/* 153 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = function desaturate(color) {
@@ -12751,7 +12184,7 @@ module.exports = function desaturate(color) {
 
 
 /***/ }),
-/* 159 */
+/* 154 */
 /***/ (function(module, exports) {
 
 module.exports = function grayscale(color) {
@@ -12768,7 +12201,7 @@ module.exports = function grayscale(color) {
 
 
 /***/ }),
-/* 160 */
+/* 155 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = function lighten(color) {
@@ -12781,7 +12214,7 @@ module.exports = function lighten(color) {
 
 
 /***/ }),
-/* 161 */
+/* 156 */
 /***/ (function(module, exports) {
 
 module.exports = function mix(color) {
@@ -12806,7 +12239,7 @@ module.exports = function mix(color) {
 
 
 /***/ }),
-/* 162 */
+/* 157 */
 /***/ (function(module, exports) {
 
 module.exports = function namedColors(color) {
@@ -12964,7 +12397,7 @@ module.exports = function namedColors(color) {
 
 
 /***/ }),
-/* 163 */
+/* 158 */
 /***/ (function(module, exports) {
 
 module.exports = function negate(color) {
@@ -12976,7 +12409,7 @@ module.exports = function negate(color) {
 
 
 /***/ }),
-/* 164 */
+/* 159 */
 /***/ (function(module, exports) {
 
 module.exports = function opaquer(color) {
@@ -12987,7 +12420,7 @@ module.exports = function opaquer(color) {
 
 
 /***/ }),
-/* 165 */
+/* 160 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = function rotate(color) {
@@ -13000,7 +12433,7 @@ module.exports = function rotate(color) {
 
 
 /***/ }),
-/* 166 */
+/* 161 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = function saturate(color) {
@@ -13013,7 +12446,7 @@ module.exports = function saturate(color) {
 
 
 /***/ }),
-/* 167 */
+/* 162 */
 /***/ (function(module, exports) {
 
 // Adapted from http://gimp.sourcearchive.com/documentation/2.6.6-1ubuntu1/color-to-alpha_8c-source.html
@@ -13065,7 +12498,7 @@ module.exports = function toAlpha(color) {
 
 
 /***/ }),
-/* 168 */
+/* 163 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(module, global) {var __WEBPACK_AMD_DEFINE_RESULT__;/*! https://mths.be/punycode v1.4.1 by @mathias */
@@ -13601,10 +13034,10 @@ module.exports = function toAlpha(color) {
 
 }(this));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(175)(module), __webpack_require__(174)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170)(module), __webpack_require__(169)))
 
 /***/ }),
-/* 169 */
+/* 164 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13695,7 +13128,7 @@ var isArray = Array.isArray || function (xs) {
 
 
 /***/ }),
-/* 170 */
+/* 165 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13787,18 +13220,18 @@ var objectKeys = Object.keys || function (obj) {
 
 
 /***/ }),
-/* 171 */
+/* 166 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-exports.decode = exports.parse = __webpack_require__(169);
-exports.encode = exports.stringify = __webpack_require__(170);
+exports.decode = exports.parse = __webpack_require__(164);
+exports.encode = exports.stringify = __webpack_require__(165);
 
 
 /***/ }),
-/* 172 */
+/* 167 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13825,8 +13258,8 @@ exports.encode = exports.stringify = __webpack_require__(170);
 
 
 
-var punycode = __webpack_require__(168);
-var util = __webpack_require__(173);
+var punycode = __webpack_require__(163);
+var util = __webpack_require__(168);
 
 exports.parse = urlParse;
 exports.resolve = urlResolve;
@@ -13901,7 +13334,7 @@ var protocolPattern = /^([a-z0-9.+-]+:)/i,
       'gopher:': true,
       'file:': true
     },
-    querystring = __webpack_require__(171);
+    querystring = __webpack_require__(166);
 
 function urlParse(url, parseQueryString, slashesDenoteHost) {
   if (url && util.isObject(url) && url instanceof Url) return url;
@@ -14537,7 +13970,7 @@ Url.prototype.parseHost = function() {
 
 
 /***/ }),
-/* 173 */
+/* 168 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14560,7 +13993,7 @@ module.exports = {
 
 
 /***/ }),
-/* 174 */
+/* 169 */
 /***/ (function(module, exports) {
 
 var g;
@@ -14587,7 +14020,7 @@ module.exports = g;
 
 
 /***/ }),
-/* 175 */
+/* 170 */
 /***/ (function(module, exports) {
 
 module.exports = function(module) {
@@ -14615,15 +14048,15 @@ module.exports = function(module) {
 
 
 /***/ }),
-/* 176 */
+/* 171 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let gridHelperView = __webpack_require__(53);
-let search = __webpack_require__(50);
-let blinkView = __webpack_require__(52);
+let gridHelperView = __webpack_require__(51);
+let search = __webpack_require__(48);
+let blinkView = __webpack_require__(50);
 let {
     getBoundRect
 } = __webpack_require__(10);
@@ -14689,7 +14122,7 @@ module.exports = {
 
 
 /***/ }),
-/* 177 */
+/* 172 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14768,15 +14201,15 @@ module.exports = inside;
 
 
 /***/ }),
-/* 178 */
+/* 173 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let contentExtractorMap = __webpack_require__(183);
+let contentExtractorMap = __webpack_require__(178);
 
-let patternMap = __webpack_require__(48);
+let patternMap = __webpack_require__(46);
 
 let match = (content, rule) => {
     if (rule.active === false) return true;
@@ -14823,17 +14256,17 @@ module.exports = {
 
 
 /***/ }),
-/* 179 */
+/* 174 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let styleExtractorMap = __webpack_require__(186);
+let styleExtractorMap = __webpack_require__(181);
 
-let patternMap = __webpack_require__(48);
+let patternMap = __webpack_require__(46);
 
-let onecolor = __webpack_require__(15);
+let onecolor = __webpack_require__(17);
 
 let {
     pxToInt
@@ -14898,15 +14331,15 @@ module.exports = {
 
 
 /***/ }),
-/* 180 */
+/* 175 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let urlPatterns = __webpack_require__(49);
-let colorSimilarityPattern = __webpack_require__(47);
-let aroundPercentPattern = __webpack_require__(46);
+let urlPatterns = __webpack_require__(47);
+let colorSimilarityPattern = __webpack_require__(45);
+let aroundPercentPattern = __webpack_require__(44);
 
 module.exports = {
     contentPatternMap: {
@@ -14926,7 +14359,7 @@ module.exports = {
 
 
 /***/ }),
-/* 181 */
+/* 176 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14966,7 +14399,7 @@ let getImgUrl = (node) => {
 
 
 /***/ }),
-/* 182 */
+/* 177 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14988,16 +14421,16 @@ let getImgUrl = (node) => {
 
 
 /***/ }),
-/* 183 */
+/* 178 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let textContent = __webpack_require__(185);
-let containImgUrl = __webpack_require__(181);
-let imgUrl = __webpack_require__(182);
-let inputValue = __webpack_require__(184);
+let textContent = __webpack_require__(180);
+let containImgUrl = __webpack_require__(176);
+let imgUrl = __webpack_require__(177);
+let inputValue = __webpack_require__(179);
 
 let getAttributeAsContent = (type) => (node) => {
     return node.getAttribute(type);
@@ -15024,7 +14457,7 @@ module.exports = {
 
 
 /***/ }),
-/* 184 */
+/* 179 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15039,7 +14472,7 @@ module.exports = (node) => {
 
 
 /***/ }),
-/* 185 */
+/* 180 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15051,13 +14484,13 @@ module.exports = (node) => {
 
 
 /***/ }),
-/* 186 */
+/* 181 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-let onecolor = __webpack_require__(15);
+let onecolor = __webpack_require__(17);
 
 let {
     getFontSize, getColor, pxToInt
@@ -15088,7 +14521,7 @@ module.exports = {
 
 
 /***/ }),
-/* 187 */
+/* 182 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15127,7 +14560,7 @@ module.exports = expandNodes;
 
 
 /***/ }),
-/* 188 */
+/* 183 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15160,17 +14593,17 @@ let {
 } = __webpack_require__(1);
 let {
     meta, method, RealLetaUI
-} = __webpack_require__(120);
+} = __webpack_require__(115);
 
-let SimpleForm = __webpack_require__(118);
-let SimpleList = __webpack_require__(119);
-let PassPredicateUI = __webpack_require__(117);
+let SimpleForm = __webpack_require__(113);
+let SimpleList = __webpack_require__(114);
+let PassPredicateUI = __webpack_require__(112);
 
-let AreaChosen = __webpack_require__(189);
-let ExtractorPatternViewer = __webpack_require__(190);
+let AreaChosen = __webpack_require__(184);
+let ExtractorPatternViewer = __webpack_require__(185);
 let {
     contentPatternMap, stylePatternMap
-} = __webpack_require__(180);
+} = __webpack_require__(175);
 
 let completeData = (data) => {
     data.position = data.position || [
@@ -15304,7 +14737,7 @@ const id = v => v;
 
 
 /***/ }),
-/* 189 */
+/* 184 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15507,7 +14940,7 @@ module.exports = ({
 
 
 /***/ }),
-/* 190 */
+/* 185 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15521,7 +14954,7 @@ let {
     map
 } = __webpack_require__(2);
 
-let Select = __webpack_require__(33);
+let Select = __webpack_require__(32);
 
 /**
  * content description
@@ -15625,7 +15058,7 @@ module.exports = ({
 
 
 /***/ }),
-/* 191 */
+/* 186 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15633,7 +15066,7 @@ module.exports = ({
 
 let {
     udView, debugTooler, collectMatchInfos, search
-} = __webpack_require__(54);
+} = __webpack_require__(52);
 
 let {
     lightupSearch
