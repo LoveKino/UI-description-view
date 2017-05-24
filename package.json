@@ -36,9 +36,9 @@
     "basetype": "^0.1.4",
     "bolzano": "^0.1.1",
     "color-similarity": "0.0.1",
-    "kabanery": "^0.2.0",
-    "kabanery-select": "0.0.5",
-    "leta-ui": "^0.1.21",
+    "kabanery": "^0.2.1",
+    "kabanery-select": "0.0.6",
+    "leta-ui": "^0.1.22",
     "onecolor": "^3.0.4"
   }
 }
