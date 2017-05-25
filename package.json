@@ -8,7 +8,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "mocha test/node/**/*.js",
+    "test": "mocha \"test/function/**/*.js\"",
     "unit-test": "deftest -s src -d test/unit/dest -t test/unit/test"
   },
   "repository": {
@@ -29,6 +29,7 @@
   "devDependencies": {
     "browser-js-env": "0.0.9",
     "defcomment": "^0.4.7",
+    "es6-promisify": "^5.0.0",
     "mocha": "^3.2.0",
     "webpack": "^2.2.1"
   },
