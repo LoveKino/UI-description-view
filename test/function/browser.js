@@ -17,7 +17,9 @@ let runFileInBrowser = (file) => {
 
 let testFiles = {
     'search:position': path.join(__dirname, '../browser/case/search/position.js'),
-    'search:content:textContent': path.join(__dirname, '../browser/case/search/content/textContent.js')
+    'search:content:textContent': path.join(__dirname, '../browser/case/search/content/textContent.js'),
+    'search:content:textLength': path.join(__dirname, '../browser/case/search/content/textLength.js'),
+    'search:style:backgroundColor': path.join(__dirname, '../browser/case/search/style/backgroundColor.js')
 };
 
 describe('browser', () => {

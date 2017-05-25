@@ -62,14 +62,6 @@ let position = [
     ]
 ];
 
-let fullPosition = [
-    [1, 1],
-    [
-        [0, 0],
-        [0, 0]
-    ]
-];
-
 let allText = (rets) => {
     rets.forEach((ret) => {
         assert.equal(ret.nodeType, 3);
@@ -82,97 +74,6 @@ let checkLen = (rets, len) => {
     assert.equal(rets.length, len);
     return rets;
 };
-
-checkLen(allText(search(nodes, {
-    style: [],
-    content: [{
-        active: true,
-        extractorType: 'textContent',
-        pattern: '123',
-        patternType: 'contain'
-    }],
-    position,
-}, {
-    gridScope
-})), 2);
-
-checkLen(search(nodes, {
-    style: [],
-    content: [{
-        active: true,
-        extractorType: 'textContent',
-        pattern: '',
-        patternType: 'contain'
-    }],
-    position: fullPosition,
-}, {
-    gridScope
-}), 5);
-
-checkLen(allText(search(nodes, {
-    style: [],
-    content: [{
-        active: true,
-        extractorType: 'textContent',
-        pattern: ' 123',
-        patternType: 'equal'
-    }],
-    position,
-}, {
-    gridScope
-})), 1);
-
-checkLen(allText(search(nodes, {
-    style: [],
-    content: [{
-        active: true,
-        extractorType: 'textContent',
-        pattern: '123',
-        patternType: 'equal'
-    }],
-    position,
-}, {
-    gridScope
-})), 0);
-
-checkLen(allText(search(nodes, {
-    style: [],
-    content: [{
-        active: true,
-        extractorType: 'textContent',
-        pattern: '123',
-        patternType: 'trimEqual'
-    }],
-    position,
-}, {
-    gridScope
-})), 1);
-
-checkLen(allText(search(nodes, {
-    style: [],
-    content: [{
-        active: true,
-        extractorType: 'textContent',
-        pattern: '^\\d+$',
-        patternType: 'regExp'
-    }],
-    position,
-}, {
-    gridScope
-})), 1);
-
-checkLen(allText(search(nodes, {
-    style: [],
-    content: [{
-        active: true,
-        extractorType: 'textContent',
-        pattern: '\\d+',
-        patternType: 'regExp'
-    }],
-    position,
-}, {
-    gridScope
-})), 2);
 
 checkLen(allText(search(nodes, {
     style: [],
