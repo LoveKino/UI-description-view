@@ -1,6 +1,6 @@
 {
   "name": "ui-description-view",
-  "version": "0.0.43",
+  "version": "0.0.44",
   "description": "UI assertion, a simple UI DSL, used to describe the restraint of some UI elements, after description a UI element, we can try to search in the area of page to find some elements which conform to these descriptions.",
   "main": "index.js",
   "directories": {
@@ -38,17 +38,17 @@
     "basetype": "^0.1.4",
     "bolzano": "^0.1.1",
     "color-similarity": "0.0.1",
-    "kabanery": "^0.2.2",
-    "kabanery-select": "0.0.7",
-    "leta-ui": "^0.1.23",
+    "kabanery": "^0.2.3",
+    "kabanery-select": "0.0.8",
+    "leta-ui": "^0.1.24",
     "onecolor": "^3.0.4"
   },
   "readmeDocOptions": {
-     "ignores": [
-        "**/*/node_modules/**/*",
-        "node_modules/**/*",
-        "test/**/*",
-        "example/**/*"
-      ]
-   }
+    "ignores": [
+      "**/*/node_modules/**/*",
+      "node_modules/**/*",
+      "test/**/*",
+      "example/**/*"
+    ]
+  }
 }
