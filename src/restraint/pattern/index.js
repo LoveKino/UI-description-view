@@ -6,6 +6,8 @@ let colorSimilarityPattern = require('./colorSimilarityPattern');
 
 let aroundPercentPattern = require('./aroundPercentPattern');
 
+let mathPattern = require('./math');
+
 let {
     mergeMap, reduce
 } = require('bolzano');
@@ -30,7 +32,12 @@ let trimEqual = (pattern = '', content = '') => {
 };
 
 module.exports = reduce([
-    colorSimilarityPattern, urlPattern, aroundPercentPattern, {
+    colorSimilarityPattern,
+    urlPattern,
+    aroundPercentPattern,
+    mathPattern,
+
+    {
         equal,
         contain,
         regExp,

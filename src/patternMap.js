@@ -11,6 +11,7 @@ module.exports = {
         'inputValue': ['contain', 'equal', 'regExp', 'trimEqual'],
         'containImgUrl': ['contain', 'regExp', 'equal', 'trimEqual'],
         'placeholder': ['contain', 'equal', 'regExp', 'trimEqual'],
+        'textLength': ['>=', '<=', '>', '<', '=']
     },
 
     stylePatternMap: {

@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 186);
+/******/ 	return __webpack_require__(__webpack_require__.s = 187);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -4277,6 +4277,8 @@ let colorSimilarityPattern = __webpack_require__(45);
 
 let aroundPercentPattern = __webpack_require__(44);
 
+let mathPattern = __webpack_require__(181);
+
 let {
     mergeMap, reduce
 } = __webpack_require__(2);
@@ -4301,7 +4303,12 @@ let trimEqual = (pattern = '', content = '') => {
 };
 
 module.exports = reduce([
-    colorSimilarityPattern, urlPattern, aroundPercentPattern, {
+    colorSimilarityPattern,
+    urlPattern,
+    aroundPercentPattern,
+    mathPattern,
+
+    {
         equal,
         contain,
         regExp,
@@ -4402,7 +4409,7 @@ let {
     match
 } = __webpack_require__(43);
 
-let expandNodes = __webpack_require__(182);
+let expandNodes = __webpack_require__(183);
 
 /**
  * search target nodes accroding to the description of UI
@@ -4527,7 +4534,7 @@ let isItemChosen = (i, j, lt, rb) => {
  * after description a ui element, we can try to search in the page to find some elements which conform to these descriptions.
  */
 
-let udView = __webpack_require__(183);
+let udView = __webpack_require__(184);
 
 let search = __webpack_require__(48);
 
@@ -14279,7 +14286,7 @@ module.exports = {
 "use strict";
 
 
-let styleExtractorMap = __webpack_require__(181);
+let styleExtractorMap = __webpack_require__(182);
 
 let patternMap = __webpack_require__(46);
 
@@ -14365,6 +14372,7 @@ module.exports = {
         'inputValue': ['contain', 'equal', 'regExp', 'trimEqual'],
         'containImgUrl': ['contain', 'regExp', 'equal', 'trimEqual'],
         'placeholder': ['contain', 'equal', 'regExp', 'trimEqual'],
+        'textLength': ['>=', '<=', '>', '<']
     },
 
     stylePatternMap: {
@@ -14448,6 +14456,9 @@ let textContent = __webpack_require__(180);
 let containImgUrl = __webpack_require__(176);
 let imgUrl = __webpack_require__(177);
 let inputValue = __webpack_require__(179);
+let {
+    isString
+} = __webpack_require__(0);
 
 let getAttributeAsContent = (type) => (node) => {
     return node.getAttribute(type);
@@ -14464,12 +14475,22 @@ let placeholder = (node) => {
     return getPlaceholder(node) || '';
 };
 
+let textLength = (node) => {
+    let text = node && node.textContent;
+    if (isString(text)) {
+        return text.length;
+    } else {
+        return 0;
+    }
+};
+
 module.exports = {
     textContent,
     containImgUrl,
     imgUrl,
     placeholder,
-    inputValue
+    inputValue,
+    textLength
 };
 
 
@@ -14507,6 +14528,21 @@ module.exports = (node) => {
 "use strict";
 
 
+module.exports = {
+    '>=': (v1, v2) => v1 >= v2,
+    '<=': (v1, v2) => v1 <= v2,
+    '>': (v1, v2) => v1 > v2,
+    '<': (v1, v2) => v1 < v2
+};
+
+
+/***/ }),
+/* 182 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
 let onecolor = __webpack_require__(17);
 
 let {
@@ -14538,7 +14574,7 @@ module.exports = {
 
 
 /***/ }),
-/* 182 */
+/* 183 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14577,7 +14613,7 @@ module.exports = expandNodes;
 
 
 /***/ }),
-/* 183 */
+/* 184 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14616,8 +14652,8 @@ let SimpleForm = __webpack_require__(113);
 let SimpleList = __webpack_require__(114);
 let PassPredicateUI = __webpack_require__(112);
 
-let AreaChosen = __webpack_require__(184);
-let ExtractorPatternViewer = __webpack_require__(185);
+let AreaChosen = __webpack_require__(185);
+let ExtractorPatternViewer = __webpack_require__(186);
 let {
     contentPatternMap, stylePatternMap
 } = __webpack_require__(175);
@@ -14754,7 +14790,7 @@ const id = v => v;
 
 
 /***/ }),
-/* 184 */
+/* 185 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14957,7 +14993,7 @@ module.exports = ({
 
 
 /***/ }),
-/* 185 */
+/* 186 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15075,7 +15111,7 @@ module.exports = ({
 
 
 /***/ }),
-/* 186 */
+/* 187 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15094,8 +15130,6 @@ let {mount} = __webpack_require__(1);
 let gridScope = wndsize();
 gridScope.x = 400;
 gridScope.width = gridScope.width - 400;
-
-console.log(gridScope);
 
 let showLight = lightupSearch(document.body, gridScope, document.querySelectorAll('#searchItem *'));
 

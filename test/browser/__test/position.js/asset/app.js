@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 194);
+/******/ 	return __webpack_require__(__webpack_require__.s = 195);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -4304,6 +4304,8 @@ let colorSimilarityPattern = __webpack_require__(46);
 
 let aroundPercentPattern = __webpack_require__(45);
 
+let mathPattern = __webpack_require__(188);
+
 let {
     mergeMap, reduce
 } = __webpack_require__(2);
@@ -4328,7 +4330,12 @@ let trimEqual = (pattern = '', content = '') => {
 };
 
 module.exports = reduce([
-    colorSimilarityPattern, urlPattern, aroundPercentPattern, {
+    colorSimilarityPattern,
+    urlPattern,
+    aroundPercentPattern,
+    mathPattern,
+
+    {
         equal,
         contain,
         regExp,
@@ -4429,7 +4436,7 @@ let {
     match
 } = __webpack_require__(44);
 
-let expandNodes = __webpack_require__(189);
+let expandNodes = __webpack_require__(190);
 
 /**
  * search target nodes accroding to the description of UI
@@ -4579,7 +4586,7 @@ console.log = function(...args) { // eslint-disable-line
 
 try {
     // TODO exception when require?
-    let retp = __webpack_require__(193);
+    let retp = __webpack_require__(194);
 
     passData = Promise.resolve(retp).then((ret) => {
         try {
@@ -15508,7 +15515,7 @@ module.exports = {
  * after description a ui element, we can try to search in the page to find some elements which conform to these descriptions.
  */
 
-let udView = __webpack_require__(190);
+let udView = __webpack_require__(191);
 
 let search = __webpack_require__(49);
 
@@ -15689,7 +15696,7 @@ module.exports = {
 "use strict";
 
 
-let styleExtractorMap = __webpack_require__(188);
+let styleExtractorMap = __webpack_require__(189);
 
 let patternMap = __webpack_require__(47);
 
@@ -15775,6 +15782,7 @@ module.exports = {
         'inputValue': ['contain', 'equal', 'regExp', 'trimEqual'],
         'containImgUrl': ['contain', 'regExp', 'equal', 'trimEqual'],
         'placeholder': ['contain', 'equal', 'regExp', 'trimEqual'],
+        'textLength': ['>=', '<=', '>', '<', '=']
     },
 
     stylePatternMap: {
@@ -15858,6 +15866,9 @@ let textContent = __webpack_require__(187);
 let containImgUrl = __webpack_require__(183);
 let imgUrl = __webpack_require__(184);
 let inputValue = __webpack_require__(186);
+let {
+    isString
+} = __webpack_require__(0);
 
 let getAttributeAsContent = (type) => (node) => {
     return node.getAttribute(type);
@@ -15874,12 +15885,22 @@ let placeholder = (node) => {
     return getPlaceholder(node) || '';
 };
 
+let textLength = (node) => {
+    let text = node && node.textContent;
+    if (isString(text)) {
+        return text.length;
+    } else {
+        return 0;
+    }
+};
+
 module.exports = {
     textContent,
     containImgUrl,
     imgUrl,
     placeholder,
-    inputValue
+    inputValue,
+    textLength
 };
 
 
@@ -15917,6 +15938,22 @@ module.exports = (node) => {
 "use strict";
 
 
+module.exports = {
+    '>=': (pattern, content) => Number(content) >= Number(pattern),
+    '<=': (pattern, content) => Number(content) <= Number(pattern),
+    '>': (pattern, content) => Number(content) > Number(pattern),
+    '<': (pattern, content) => Number(content) < Number(pattern),
+    '=': (pattern, content) => Number(content) === Number(pattern)
+};
+
+
+/***/ }),
+/* 189 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
 let onecolor = __webpack_require__(17);
 
 let {
@@ -15948,7 +15985,7 @@ module.exports = {
 
 
 /***/ }),
-/* 189 */
+/* 190 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15987,7 +16024,7 @@ module.exports = expandNodes;
 
 
 /***/ }),
-/* 190 */
+/* 191 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -16026,8 +16063,8 @@ let SimpleForm = __webpack_require__(116);
 let SimpleList = __webpack_require__(117);
 let PassPredicateUI = __webpack_require__(115);
 
-let AreaChosen = __webpack_require__(191);
-let ExtractorPatternViewer = __webpack_require__(192);
+let AreaChosen = __webpack_require__(192);
+let ExtractorPatternViewer = __webpack_require__(193);
 let {
     contentPatternMap, stylePatternMap
 } = __webpack_require__(182);
@@ -16164,7 +16201,7 @@ const id = v => v;
 
 
 /***/ }),
-/* 191 */
+/* 192 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -16367,7 +16404,7 @@ module.exports = ({
 
 
 /***/ }),
-/* 192 */
+/* 193 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -16485,7 +16522,7 @@ module.exports = ({
 
 
 /***/ }),
-/* 193 */
+/* 194 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -16584,7 +16621,7 @@ assert.equal(search(nodes, {
 
 
 /***/ }),
-/* 194 */
+/* 195 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__(53);
