@@ -29,7 +29,8 @@ mount(n('div', {
             fontSize: 5,
             textAlign: 'left'
         }
-    }, '1234')
+    }, '1234'),
+    n('span', 'ok!')
 ]), document.body);
 
 let content = [{
