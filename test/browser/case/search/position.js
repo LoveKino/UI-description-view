@@ -61,7 +61,7 @@ assert.equal(search(nodes, {
     style: []
 }, {
     gridScope
-}).length, 0);
+}).nodes.length, 0);
 
 assert(search(nodes, {
     position: [
@@ -75,7 +75,7 @@ assert(search(nodes, {
     style: []
 }, {
     gridScope
-}).length > 1);
+}).nodes.length > 1);
 
 assert.equal(search(nodes, {
     position: [
@@ -89,4 +89,4 @@ assert.equal(search(nodes, {
     style: []
 }, {
     gridScope
-}).length, 1);
+}).nodes.length, 1);

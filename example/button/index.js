@@ -8,7 +8,9 @@ let {
     lightupSearch
 } = debugTooler;
 
-let {mount} = require('kabanery');
+let {
+    mount
+} = require('kabanery');
 
 let gridScope = wndsize();
 gridScope.x = 400;
@@ -16,17 +18,19 @@ gridScope.width = gridScope.width - 400;
 
 let showLight = lightupSearch(document.body, gridScope, document.querySelectorAll('#searchItem *'));
 
+let log = console.log; // eslint-disable-line
+
 mount(udView({
     onchange: (v) => {
         try {
             showLight(v);
 
-            console.log(collectMatchInfos(document.querySelector('img'), v, gridScope));
-            console.log(search(document.querySelectorAll('*'), v, {
+            log(collectMatchInfos(document.querySelector('img'), v, gridScope));
+            log(search(document.querySelectorAll('*'), v, {
                 gridScope
             }));
         } catch (err) {
-            console.log(err); // eslint-disable-line
+            log(err); // eslint-disable-line
         }
     }
 }), document.body);

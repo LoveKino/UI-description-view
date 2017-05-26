@@ -94,7 +94,7 @@ checkLen(allText(search(nodes, {
     position,
 }, {
     gridScope
-})), 2);
+}).nodes), 2);
 
 checkLen(search(nodes, {
     style: [],
@@ -107,7 +107,7 @@ checkLen(search(nodes, {
     position: fullPosition,
 }, {
     gridScope
-}), 5);
+}).nodes, 5);
 
 checkLen(allText(search(nodes, {
     style: [],
@@ -120,7 +120,7 @@ checkLen(allText(search(nodes, {
     position,
 }, {
     gridScope
-})), 1);
+}).nodes), 1);
 
 checkLen(allText(search(nodes, {
     style: [],
@@ -133,7 +133,7 @@ checkLen(allText(search(nodes, {
     position,
 }, {
     gridScope
-})), 0);
+}).nodes), 0);
 
 checkLen(allText(search(nodes, {
     style: [],
@@ -146,7 +146,7 @@ checkLen(allText(search(nodes, {
     position,
 }, {
     gridScope
-})), 1);
+}).nodes), 1);
 
 checkLen(allText(search(nodes, {
     style: [],
@@ -159,7 +159,7 @@ checkLen(allText(search(nodes, {
     position,
 }, {
     gridScope
-})), 1);
+}).nodes), 1);
 
 checkLen(allText(search(nodes, {
     style: [],
@@ -172,7 +172,7 @@ checkLen(allText(search(nodes, {
     position,
 }, {
     gridScope
-})), 2);
+}).nodes), 2);
 
 checkLen(allText(search(nodes, {
     style: [],
@@ -185,7 +185,7 @@ checkLen(allText(search(nodes, {
     position,
 }, {
     gridScope
-})), 2);
+}).nodes), 2);
 
 checkLen(allText(search(nodes, {
     style: [],
@@ -198,7 +198,7 @@ checkLen(allText(search(nodes, {
     position,
 }, {
     gridScope
-})), 2);
+}).nodes), 2);
 
 checkLen(allText(search(nodes, {
     style: [],
@@ -211,7 +211,7 @@ checkLen(allText(search(nodes, {
     position,
 }, {
     gridScope
-})), 0);
+}).nodes), 0);
 
 checkLen(allText(search(nodes, {
     style: [],
@@ -224,7 +224,7 @@ checkLen(allText(search(nodes, {
     position,
 }, {
     gridScope
-})), 0);
+}).nodes), 0);
 
 checkLen(allText(search(nodes, {
     style: [],
@@ -237,4 +237,4 @@ checkLen(allText(search(nodes, {
     position,
 }, {
     gridScope
-})), 2);
+}).nodes), 2);

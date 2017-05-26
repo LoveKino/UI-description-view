@@ -29,12 +29,35 @@ let match = (node, {
     };
 
     return insideBox(rect, position, gridScope) && any(content, (item) => {
-        return matchContent.match(matchContent.getContent(node, item), item);
+        return isPassingOneContentRule(node, item);
     }) && any(style, (item) => {
-        return matchStyle.match(matchStyle.getContent(node, item), item);
+        return isPassingOneStyleRule(node, item);
     });
 };
 
+let isPassingPositionRule = (node, position, {
+    gridScope
+} = {}) => {
+    let {
+        bottom, height, left, right, top, width, leftOffset
+    } = getBoundRect(node);
+    let rect = {
+        bottom, height, left, right, top, width, leftOffset
+    };
+    return insideBox(rect, position, gridScope);
+};
+
+let isPassingOneContentRule = (node, item) => {
+    return matchContent.match(matchContent.getContent(node, item), item);
+};
+
+let isPassingOneStyleRule = (node, item) => {
+    return matchStyle.match(matchStyle.getContent(node, item), item);
+};
+
+/**
+ * collect match details
+ */
 let collectMatchInfos = (node, {
     position,
     content = [], style = []
@@ -78,5 +101,8 @@ module.exports = {
     matchContent,
     matchStyle,
     match,
-    collectMatchInfos
+    collectMatchInfos,
+    isPassingPositionRule,
+    isPassingOneContentRule,
+    isPassingOneStyleRule
 };

@@ -50,7 +50,7 @@ let rets = search(nodes, {
     }],
     content: [],
     position,
-});
+}).nodes;
 
 assert.equal(rets.length, 1);
 assert.equal(rets[0].outerHTML, '<div style="background-color: red">first</div>');

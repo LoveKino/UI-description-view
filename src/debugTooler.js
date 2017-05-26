@@ -16,7 +16,7 @@ let lightupSearch = (parent, gridScope, topNode) => {
 
     return (rule) => {
         hintGrid.ctx.update('position', rule.position);
-        let nodes = search(topNode, rule, {
+        let {nodes} = search(topNode, rule, {
             gridScope
         });
 
