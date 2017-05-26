@@ -1,7 +1,7 @@
 'use strict';
 
 let {
-    udView, debugTooler, collectMatchInfos, search
+    udView, debugTooler, collectMatchInfos, search, prettySearchResult
 } = require('../../src');
 
 let {
@@ -26,9 +26,9 @@ mount(udView({
             showLight(v);
 
             log(collectMatchInfos(document.querySelector('img'), v, gridScope));
-            log(search(document.querySelectorAll('*'), v, {
+            log(prettySearchResult.exhibit(search(document.querySelectorAll('*'), v, {
                 gridScope
-            }));
+            })));
         } catch (err) {
             log(err); // eslint-disable-line
         }

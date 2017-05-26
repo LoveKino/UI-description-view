@@ -18,6 +18,8 @@ let blinkView = require('./view/blinkView');
 
 let debugTooler = require('./debugTooler');
 
+let prettySearchResult = require('./search/prettySearchResult');
+
 let {
     match,
     collectMatchInfos
@@ -42,5 +44,6 @@ module.exports = {
     searchIn,
 
     match,
+    prettySearchResult,
     collectMatchInfos
 };

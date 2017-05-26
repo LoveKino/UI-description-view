@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 187);
+/******/ 	return __webpack_require__(__webpack_require__.s = 188);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -4674,7 +4674,7 @@ let isItemChosen = (i, j, lt, rb) => {
  * after description a ui element, we can try to search in the page to find some elements which conform to these descriptions.
  */
 
-let udView = __webpack_require__(184);
+let udView = __webpack_require__(185);
 
 let search = __webpack_require__(49);
 
@@ -4685,6 +4685,8 @@ let gridHelperView = __webpack_require__(52);
 let blinkView = __webpack_require__(51);
 
 let debugTooler = __webpack_require__(171);
+
+let prettySearchResult = __webpack_require__(184);
 
 let {
     match,
@@ -4710,6 +4712,7 @@ module.exports = {
     searchIn,
 
     match,
+    prettySearchResult,
     collectMatchInfos
 };
 
@@ -14180,6 +14183,9 @@ let {
     getBoundRect
 } = __webpack_require__(10);
 
+/**
+ * light up the matched nodes
+ */
 let lightupSearch = (parent, gridScope, topNode) => {
     gridScope = gridScope || wndsize();
     let hintGrid = gridHelperView({
@@ -14189,7 +14195,9 @@ let lightupSearch = (parent, gridScope, topNode) => {
 
     return (rule) => {
         hintGrid.ctx.update('position', rule.position);
-        let {nodes} = search(topNode, rule, {
+        let {
+            nodes
+        } = search(topNode, rule, {
             gridScope
         });
 
@@ -14714,6 +14722,45 @@ module.exports = expandNodes;
 "use strict";
 
 
+let {
+    map
+} = __webpack_require__(2);
+
+let exhibit = ({
+    nodes,
+    filterRouteMap,
+    expandedNodes
+}, lang = id) => {
+    return `${lang('The nodes number finded')}: ${nodes.length}; ${'the nodes number at first'}: ${expandedNodes.length};${map(filterRouteMap, ({
+        type, rule, nodes
+    }, index) => {
+        return ` ${index + 1}. ${lang('apply rule')}: ${getRuleDescription(rule, type, lang)}, ${lang('the nodes number after filtering')}: ${nodes.length};`;
+    }).join('')}`;
+};
+
+let getRuleDescription = (rule, type, lang) => {
+    if(type === 'position') {
+        let [grid, coord] = rule;
+        return `[${lang(type)}, ${lang('grid')} ${grid[0]} * ${grid[1]}, ${lang('coord')} (${coord[0][0]}, ${coord[0][1]}) - (${coord[0][0]}, ${coord[0][1]})]`;
+    } else {
+        return `[${lang(type)}, ${rule.extractorType} ${rule.patternType} ${rule.pattern}]`;
+    }
+};
+
+let id = v => v;
+
+module.exports = {
+    exhibit
+};
+
+
+/***/ }),
+/* 185 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
 /**
  *
  * view used to describe a UI
@@ -14747,8 +14794,8 @@ let SimpleForm = __webpack_require__(113);
 let SimpleList = __webpack_require__(114);
 let PassPredicateUI = __webpack_require__(112);
 
-let AreaChosen = __webpack_require__(185);
-let ExtractorPatternViewer = __webpack_require__(186);
+let AreaChosen = __webpack_require__(186);
+let ExtractorPatternViewer = __webpack_require__(187);
 let {
     contentPatternMap, stylePatternMap
 } = __webpack_require__(175);
@@ -14885,7 +14932,7 @@ const id = v => v;
 
 
 /***/ }),
-/* 185 */
+/* 186 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15088,7 +15135,7 @@ module.exports = ({
 
 
 /***/ }),
-/* 186 */
+/* 187 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15206,14 +15253,14 @@ module.exports = ({
 
 
 /***/ }),
-/* 187 */
+/* 188 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 let {
-    udView, debugTooler, collectMatchInfos, search
+    udView, debugTooler, collectMatchInfos, search, prettySearchResult
 } = __webpack_require__(53);
 
 let {
@@ -15238,9 +15285,9 @@ mount(udView({
             showLight(v);
 
             log(collectMatchInfos(document.querySelector('img'), v, gridScope));
-            log(search(document.querySelectorAll('*'), v, {
+            log(prettySearchResult.exhibit(search(document.querySelectorAll('*'), v, {
                 gridScope
-            }));
+            })));
         } catch (err) {
             log(err); // eslint-disable-line
         }
