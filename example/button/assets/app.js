@@ -1454,12 +1454,40 @@ let pxToInt = (px) => {
     return px.indexOf('px') !== -1 ? Number(px.substring(0, px.length - 2)) : Number(px);
 };
 
+function wndsize() {
+    var w = 0;
+    var h = 0;
+    //IE
+    if (!window.innerWidth) {
+        if (!(document.documentElement.clientWidth === 0)) {
+            //strict mode
+            w = document.documentElement.clientWidth;
+            h = document.documentElement.clientHeight;
+        } else {
+            //quirks mode
+            w = document.body.clientWidth;
+            h = document.body.clientHeight;
+        }
+    } else {
+        //w3c
+        w = window.innerWidth;
+        h = window.innerHeight;
+    }
+    return {
+        width: w,
+        height: h,
+        x: 0,
+        y: 0
+    };
+}
+
 module.exports = {
     getBoundRect,
     ImageInnerNode,
     pxToInt,
     getFontSize,
-    getColor
+    getColor,
+    wndsize
 };
 
 
@@ -14180,7 +14208,7 @@ let gridHelperView = __webpack_require__(52);
 let search = __webpack_require__(49);
 let blinkView = __webpack_require__(51);
 let {
-    getBoundRect
+    getBoundRect, wndsize
 } = __webpack_require__(10);
 
 /**
@@ -14215,33 +14243,6 @@ let lightupSearch = (parent, gridScope, topNode) => {
         return nodes;
     };
 };
-
-function wndsize() {
-    var w = 0;
-    var h = 0;
-    //IE
-    if (!window.innerWidth) {
-        if (!(document.documentElement.clientWidth === 0)) {
-            //strict mode
-            w = document.documentElement.clientWidth;
-            h = document.documentElement.clientHeight;
-        } else {
-            //quirks mode
-            w = document.body.clientWidth;
-            h = document.body.clientHeight;
-        }
-    } else {
-        //w3c
-        w = window.innerWidth;
-        h = window.innerHeight;
-    }
-    return {
-        width: w,
-        height: h,
-        x: 0,
-        y: 0
-    };
-}
 
 module.exports = {
     lightupSearch
